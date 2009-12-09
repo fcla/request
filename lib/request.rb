@@ -2,6 +2,8 @@ require 'dm-core'
 require 'dm-types'
 require 'user'
 
+DataMapper.setup(:default, "sqlite3://#{Dir.pwd}/data/request.db")
+
 class Request
   include DataMapper::Resource
 
