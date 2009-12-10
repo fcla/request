@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'user'
+require 'history'
 require 'pp'
 
 user_1 = User.new
