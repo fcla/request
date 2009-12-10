@@ -10,10 +10,12 @@ class RequestHandler
   # enqueues a new request. 
   # If authorized, returns the id of the new request.
   # Raises exception if not authorized.
+  # Returns nil if a request of the same time is already enqueued for specified ieid.
 
   def self.enqueue_request user, type, ieid
 
     # raise error if specified type is not supported
+    # TODO: move to validation in model?
     raise InvalidRequestType, "#{type} is not a supported request type" unless supported? type
 
     # if request already enqueued or in process for given ieid, refuse to enqueue new request
