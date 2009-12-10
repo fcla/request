@@ -44,13 +44,13 @@ describe PersistRequest do
     return user
   end
 
-  def add_non_privileged_user
+  def add_non_privileged_user account = "FDA"
     user = User.new
 
     user.attributes = {
       :username => "nopriv",
       :password => "nopriv",
-      :account => "FDA",
+      :account => account,
       :is_operator => false,
       :can_disseminate => false,
       :can_withdraw => false,
@@ -284,7 +284,33 @@ describe PersistRequest do
 
     request.should_not == nil
     request.id.should == request_id
-
   end
+
+  it "should allow an authorized user to query for requests by ieid and type" do
+    user = add_privileged_user
+    ieid = rand(1000)
+    now = Time.now
+
+    request_id = PersistRequest.enqueue_request user, :disseminate, ieid
+
+    request = PersistRequest.query_request user, ieid, :disseminate
+
+    request.should_not == nil
+    request.id.should == request_id
+  end
+
+  it "should not allow an non-authorized user to query for requests by ieid and type" do
+    user = add_privileged_user
+    user2 = add_non_privileged_user "FOO"
+    ieid = rand(1000)
+    now = Time.now
+
+    request_id = PersistRequest.enqueue_request user, :disseminate, ieid
+
+    request = PersistRequest.query_request user2, ieid, :disseminate
+
+    request.should == nil
+  end
+
 
 end

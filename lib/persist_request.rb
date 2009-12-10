@@ -88,7 +88,12 @@ class PersistRequest
     
     if request and requesting_user.is_operator == false
       original_user = User.get(request.user_id)
-      return nil unless request.user.account == original_user.account
+
+      if original_user.account == requesting_user.account
+        return request
+      else
+        return nil
+      end
     else
       return request
     end
