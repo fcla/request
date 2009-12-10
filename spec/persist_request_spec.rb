@@ -122,7 +122,6 @@ describe PersistRequest do
     lambda { id = @request.enqueue_request op, :foo, ieid }.should raise_error(InvalidRequestType)
   end
 
-
   it "should enqueue a new disseminate request requested by a privileged user" do
     priv_user = add_privileged_user
     ieid = rand(1000)
@@ -130,6 +129,40 @@ describe PersistRequest do
 
     id = @request.enqueue_request priv_user, :peek, ieid
     
+    just_added = Request.get(id)
+
+    just_added.should_not == nil
+    just_added.ieid.should == ieid.to_s
+    just_added.timestamp.to_s.should == now.iso8601
+    just_added.is_authorized.should == true
+    just_added.status.should == :enqueued
+    just_added.request_type.should == :peek
+  end
+
+  it "should enqueue a new withdrawal request requested by a privileged user" do
+    priv_user = add_privileged_user
+    ieid = rand(1000)
+    now = Time.now
+
+    id = @request.enqueue_request priv_user, :withdraw, ieid
+
+    just_added = Request.get(id)
+
+    just_added.should_not == nil
+    just_added.ieid.should == ieid.to_s
+    just_added.timestamp.to_s.should == now.iso8601
+    just_added.is_authorized.should == false
+    just_added.status.should == :enqueued
+    just_added.request_type.should == :withdraw
+  end
+
+  it "should enqueue a new peek request requested by a privileged user" do
+    priv_user = add_privileged_user
+    ieid = rand(1000)
+    now = Time.now
+
+    id = @request.enqueue_request priv_user, :peek, ieid
+
     just_added = Request.get(id)
 
     just_added.should_not == nil
