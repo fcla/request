@@ -222,4 +222,44 @@ describe PersistRequest do
     history_record.timestamp.to_s.should == now.iso8601
   end
 
+  it "should not allow an operator to approve own requests" do
+    op = add_op_user
+    now = Time.now
+    ieid = rand(1000)
+
+    request_id = PersistRequest.enqueue_request op, :withdraw, ieid
+
+    history_id = PersistRequest.authorize_request(request_id, op)
+
+    request_record = Request.get(request_id)
+    history_record = History.get(history_id)
+
+    request_record.is_authorized.should == false
+
+    history_record.user_id.should == op.id
+    history_record.request_id.should == request_record.id
+    history_record.approval_outcome.should == :denied
+    history_record.timestamp.to_s.should == now.iso8601
+  end
+
+  it "should not allow a regular user to to approve own requests" do
+    user = add_privileged_user
+    now = Time.now
+    ieid = rand(1000)
+
+    request_id = PersistRequest.enqueue_request user, :withdraw, ieid
+
+    history_id = PersistRequest.authorize_request(request_id, user)
+
+    request_record = Request.get(request_id)
+    history_record = History.get(history_id)
+
+    request_record.is_authorized.should == false
+
+    history_record.user_id.should == user.id
+    history_record.request_id.should == request_record.id
+    history_record.approval_outcome.should == :denied
+    history_record.timestamp.to_s.should == now.iso8601
+  end
+
 end
