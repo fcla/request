@@ -375,4 +375,52 @@ describe PersistRequest do
     set_of_request_ids.include?(requests[3].id).should == true
   end
 
+  it "should property return nil on a search for requests on an account with no requests" do
+    op = add_op_user
+
+    requests = PersistRequest.query_account op, "FDA"
+
+    requests.length.should == 0
+  end
+
+  it "should allow privileged users to query all requests in a given account" do
+    user = add_privileged_user
+
+    ieid1 = rand(1000)
+    ieid2 = rand(1000)
+    ieid3 = rand(1000)
+    ieid4 = rand(1000)
+
+    request_id1 = PersistRequest.enqueue_request user, :disseminate, ieid1
+    request_id2 = PersistRequest.enqueue_request user, :disseminate, ieid2
+    request_id3 = PersistRequest.enqueue_request user, :disseminate, ieid3
+    request_id4 = PersistRequest.enqueue_request user, :disseminate, ieid4
+
+    set_of_request_ids = [request_id1, request_id2, request_id3, request_id4]
+
+    requests = PersistRequest.query_account user, "FDA"
+
+    requests.length.should == 4
+
+    set_of_request_ids.include?(requests[0].id).should == true
+    set_of_request_ids.include?(requests[1].id).should == true
+    set_of_request_ids.include?(requests[2].id).should == true
+    set_of_request_ids.include?(requests[3].id).should == true
+  end
+
+  it "should not allow non-privileged users to query all requests in a given account" do
+    user = add_privileged_user
+    user2 = add_non_privileged_user "FOO"
+
+    ieid1 = rand(1000)
+    ieid2 = rand(1000)
+    ieid3 = rand(1000)
+    ieid4 = rand(1000)
+
+    request_id1 = PersistRequest.enqueue_request user, :disseminate, ieid1
+
+    requests = PersistRequest.query_account user2, "FDA"
+
+    requests.should == nil
+  end
 end

@@ -110,10 +110,11 @@ class PersistRequest
   end
 
   # returns the set of all requests (pending and not) for a given account
-  # returns nil if user does not have authorization, or if result set is empty
+  # returns nil if user does not have authorization
+  # returns empty array if result set is empty
   
   def self.query_account requesting_user, account
-    if requesting_user.is_operator == false and request.account != requesting_user.account
+    if requesting_user.is_operator == false and account != requesting_user.account
         return nil
     end
 
