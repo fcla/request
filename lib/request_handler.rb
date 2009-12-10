@@ -5,7 +5,7 @@ require 'history'
 class InvalidRequestType < StandardError; end
 class NotAuthorized < StandardError; end
 
-class PersistRequest
+class RequestHandler
 
   # enqueues a new request. 
   # If authorized, returns the id of the new request.
@@ -151,5 +151,4 @@ class PersistRequest
   def self.already_enqueued? ieid, type
     Request.first(:ieid => ieid, :request_type => type, :status => :enqueued) != nil
   end
-
 end
