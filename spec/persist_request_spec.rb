@@ -423,4 +423,25 @@ describe PersistRequest do
 
     requests.should == nil
   end
+
+  it "should allow operators to query all requests in a given ieid" do
+    op = add_op_user
+
+    ieid = rand(1000)
+
+    request_id1 = PersistRequest.enqueue_request op, :disseminate, ieid
+    request_id2 = PersistRequest.enqueue_request op, :withdraw, ieid
+    request_id3 = PersistRequest.enqueue_request op, :peek, ieid
+
+    set_of_request_ids = [request_id1, request_id2, request_id3]
+
+    requests = PersistRequest.query_ieid op, ieid
+
+    requests.length.should == 3
+
+    set_of_request_ids.include?(requests[0].id).should == true
+    set_of_request_ids.include?(requests[1].id).should == true
+    set_of_request_ids.include?(requests[2].id).should == true
+  end
+
 end
