@@ -172,4 +172,14 @@ describe PersistRequest do
     just_added.status.should == :enqueued
     just_added.request_type.should == :peek
   end
+
+  it "should not enqueue a new disseminate request requested by a non-privileged user" do
+    non_priv_user = add_non_privileged_user
+    ieid = rand(1000)
+    now = Time.now
+
+    id = @request.enqueue_request non_priv_user, :disseminate, ieid
+
+    id.should == nil
+  end
 end
