@@ -180,4 +180,25 @@ describe PersistRequest do
 
     id.should == nil
   end
+
+  it "should not enqueue a new withdraw request requested by a non-privileged user" do
+    non_priv_user = add_non_privileged_user
+    ieid = rand(1000)
+    now = Time.now
+
+    id = PersistRequest.enqueue_request non_priv_user, :withdraw, ieid
+
+    id.should == nil
+  end
+
+  it "should not enqueue a new peek request requested by a non-privileged user" do
+    non_priv_user = add_non_privileged_user
+    ieid = rand(1000)
+    now = Time.now
+
+    id = PersistRequest.enqueue_request non_priv_user, :peek, ieid
+
+    id.should == nil
+  end
+
 end
