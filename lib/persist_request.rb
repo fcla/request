@@ -3,11 +3,13 @@ require 'request'
 require 'history'
 
 class InvalidRequestType < StandardError; end
+class NotAuthorized < StandardError; end
 
 class PersistRequest
 
   # enqueues a new request. 
-  # If authorized, returns the id of the new request. Otherwise, returns nil
+  # If authorized, returns the id of the new request.
+  # Raises exception if not authorized.
 
   def self.enqueue_request user, type, ieid
 
@@ -45,12 +47,13 @@ class PersistRequest
 
       return r.id
     else
-      return nil
+      raise NotAuthorized
     end
   end
 
   # authorize a request, and save record of authorization outcome. 
   # returns primary key to outcome record
+  # raises exception if user is not authorized to authorize request
   
   def self.authorize_request request_id, authorizing_user
     request = Request.get(request_id)
@@ -59,14 +62,12 @@ class PersistRequest
 
     if authorizing_user.is_operator and request.user_id != authorizing_user.id
       request.is_authorized = true
-      approval = :approved
     else
-      approval = :denied
+      raise NotAuthorized
     end
 
     history.attributes = {
-      :timestamp => now,
-      :approval_outcome => approval
+      :timestamp => now
     }
 
     authorizing_user.histories << history
@@ -80,26 +81,28 @@ class PersistRequest
   end
 
   # if one exists, returns any pending request associated with ieid ieid of type type.
-  # if user doesn't have permission, or if no such request exists, returns nil.
+  # if no such request exists, returns nil.
+  # if user is not authorized, exception is raised
   
   def self.query_request requesting_user, ieid, type
     request = Request.first(:ieid => ieid, :request_type => type, :status => :enqueued)
 
     # if user is not an operator, check if account of requesting user matches account of the request
     
-    if request and requesting_user.is_operator == false
-      if request.account == requesting_user.account
+    if request
+      if request.account == requesting_user.account or requesting_user.is_operator == true
         return request
       else
-        return nil
+        raise NotAuthorized
       end
     else
-      return request
+      return nil
     end
   end
 
   # if one exists, deletes any pending request associated with ieid ieid of type type.
-  # if user doesn't have authorization, or if no such request exists, returns nil.
+  # if user doesn't have authorization, raise error.
+  # if no such request exists, returns nil.
   
   def self.delete_request requesting_user, ieid, type
     request = query_request requesting_user, ieid, type
@@ -110,17 +113,18 @@ class PersistRequest
   end
 
   # returns the set of all requests (pending and not) for a given account
-  # returns nil if user does not have authorization
+  # raises exception if user does not have authorization
   # returns empty array if result set is empty
   
   def self.query_account requesting_user, account
     if requesting_user.is_operator == false and account != requesting_user.account
-        return nil
+        raise NotAuthorized
     end
 
     return Request.all(:account => account)
   end
 
+  # TODO: authorization
   def self.query_ieid requesting_user, ieid
     return Request.all(:ieid => ieid)
   end
@@ -145,7 +149,7 @@ class PersistRequest
   end
 
   def self.already_enqueued? ieid, type
-    Request.first(:ieid => ieid, :request_type => type, :status => :enqueued)
+    Request.first(:ieid => ieid, :request_type => type, :status => :enqueued) != nil
   end
 
 end

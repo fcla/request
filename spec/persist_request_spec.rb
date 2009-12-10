@@ -176,9 +176,7 @@ describe PersistRequest do
     ieid = rand(1000)
     now = Time.now
 
-    id = PersistRequest.enqueue_request non_priv_user, :disseminate, ieid
-
-    id.should == nil
+    lambda { PersistRequest.enqueue_request non_priv_user, :disseminate, ieid }.should raise_error(NotAuthorized)
   end
 
   it "should not enqueue a new withdraw request requested by a non-privileged user" do
@@ -186,9 +184,7 @@ describe PersistRequest do
     ieid = rand(1000)
     now = Time.now
 
-    id = PersistRequest.enqueue_request non_priv_user, :withdraw, ieid
-
-    id.should == nil
+    lambda { PersistRequest.enqueue_request non_priv_user, :withdraw, ieid }.should raise_error(NotAuthorized)
   end
 
   it "should not enqueue a new peek request requested by a non-privileged user" do
@@ -196,9 +192,7 @@ describe PersistRequest do
     ieid = rand(1000)
     now = Time.now
 
-    id = PersistRequest.enqueue_request non_priv_user, :peek, ieid
-
-    id.should == nil
+    lambda { PersistRequest.enqueue_request non_priv_user, :peek, ieid }.should raise_error(NotAuthorized)
   end
 
   it "should not enqueue a request if a request of that type is already enqueued for a given ieid" do
@@ -229,7 +223,6 @@ describe PersistRequest do
 
     history_record.user_id.should == op2.id
     history_record.request_id.should == request_record.id
-    history_record.approval_outcome.should == :approved
     history_record.timestamp.to_s.should == now.iso8601
   end
 
@@ -240,17 +233,7 @@ describe PersistRequest do
 
     request_id = PersistRequest.enqueue_request op, :withdraw, ieid
 
-    history_id = PersistRequest.authorize_request(request_id, op)
-
-    request_record = Request.get(request_id)
-    history_record = History.get(history_id)
-
-    request_record.is_authorized.should == false
-
-    history_record.user_id.should == op.id
-    history_record.request_id.should == request_record.id
-    history_record.approval_outcome.should == :denied
-    history_record.timestamp.to_s.should == now.iso8601
+    lambda { history_id = PersistRequest.authorize_request(request_id, op) }.should raise_error(NotAuthorized)
   end
 
   it "should not allow a regular user to to approve own requests" do
@@ -260,17 +243,19 @@ describe PersistRequest do
 
     request_id = PersistRequest.enqueue_request user, :withdraw, ieid
 
-    history_id = PersistRequest.authorize_request(request_id, user)
+    lambda { history_id = PersistRequest.authorize_request(request_id, user) }.should raise_error(NotAuthorized)
+  end
 
-    request_record = Request.get(request_id)
-    history_record = History.get(history_id)
+  it "should not allow a regular user to to approve another user's requests" do
+    user = add_privileged_user
+    user2 = add_privileged_user
 
-    request_record.is_authorized.should == false
+    now = Time.now
+    ieid = rand(1000)
 
-    history_record.user_id.should == user.id
-    history_record.request_id.should == request_record.id
-    history_record.approval_outcome.should == :denied
-    history_record.timestamp.to_s.should == now.iso8601
+    request_id = PersistRequest.enqueue_request user, :withdraw, ieid
+
+    lambda { history_id = PersistRequest.authorize_request(request_id, user2) }.should raise_error(NotAuthorized)
   end
 
   it "should allow an operator to query for requests by ieid and type" do
@@ -307,9 +292,7 @@ describe PersistRequest do
 
     request_id = PersistRequest.enqueue_request user, :disseminate, ieid
 
-    request = PersistRequest.query_request user2, ieid, :disseminate
-
-    request.should == nil
+    lambda { PersistRequest.query_request user2, ieid, :disseminate }.should raise_error(NotAuthorized)
   end
 
   it "should allow an operator to delete a request by type and ieid" do
@@ -344,10 +327,9 @@ describe PersistRequest do
 
     request_id = PersistRequest.enqueue_request user, :disseminate, ieid
 
-    request = PersistRequest.delete_request user2, ieid, :disseminate
+    lambda { PersistRequest.delete_request user2, ieid, :disseminate }.should raise_error(NotAuthorized)
 
-    request.should == nil
-    Request.get(request_id).id.should == request_id
+    Request.get(request_id).should_not == nil
   end
 
   it "should allow operators to query all requests in a given account" do
@@ -413,15 +395,10 @@ describe PersistRequest do
     user2 = add_non_privileged_user "FOO"
 
     ieid1 = rand(1000)
-    ieid2 = rand(1000)
-    ieid3 = rand(1000)
-    ieid4 = rand(1000)
 
-    request_id1 = PersistRequest.enqueue_request user, :disseminate, ieid1
+    PersistRequest.enqueue_request user, :disseminate, ieid1
 
-    requests = PersistRequest.query_account user2, "FDA"
-
-    requests.should == nil
+    lambda { PersistRequest.query_account user2, "FDA" }.should raise_error(NotAuthorized)
   end
 
   it "should allow operators to query all requests in a given ieid" do
