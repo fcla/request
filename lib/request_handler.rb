@@ -129,6 +129,15 @@ class RequestHandler
     return Request.all(:ieid => ieid)
   end
 
+  # sets status of request to :released_to_workspace, dequeing it
+
+  def self.dequeue_request request_id
+    r = Request.get(request_id)
+
+    r.status = :released_to_workspace
+    r.save!
+  end
+
   private
 
   # returns true if type is supported

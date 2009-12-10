@@ -436,4 +436,18 @@ describe RequestHandler do
   it "should not allow non-privileged users to query all requests in a given ieid" do
     pending "integration to service that knows what account a given ieid belongs to"
   end
+
+  it "should dequeue requests" do
+    op = add_op_user
+
+    ieid = rand(1000)
+
+    request_id = RequestHandler.enqueue_request op, :disseminate, ieid
+
+    RequestHandler.dequeue_request request_id
+
+    r = Request.get(request_id)
+
+    r.status.should == :released_to_workspace
+  end
 end
