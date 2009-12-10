@@ -9,6 +9,7 @@ class Request
 
    property :id, Serial
    property :ieid, String, :nullable => false
+   property :account, String, :nullable => false
    property :timestamp, DateTime, :nullable => false
    property :is_authorized, Boolean, :nullable => false
    property :status, Enum[:enqueued, :released_to_workspace], :default => :enqueued

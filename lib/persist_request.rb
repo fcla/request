@@ -31,6 +31,7 @@ class PersistRequest
 
       r.attributes = {
         :ieid => ieid,
+        :account => user.account,
         :timestamp => now,
         :is_authorized => auth,
         :status => :enqueued,
@@ -84,12 +85,10 @@ class PersistRequest
   def self.query_request requesting_user, ieid, type
     request = Request.first(:ieid => ieid, :request_type => type, :status => :enqueued)
 
-    # if user is not an operator, check if account of requesting user matches account of submitting user
+    # if user is not an operator, check if account of requesting user matches account of the request
     
     if request and requesting_user.is_operator == false
-      original_user = User.get(request.user_id)
-
-      if original_user.account == requesting_user.account
+      if request.account == requesting_user.account
         return request
       else
         return nil
