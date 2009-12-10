@@ -78,7 +78,21 @@ class PersistRequest
     return history.id
   end
 
-  # query a request by type and ieid
+  # if one exists, returns any pending request associated with ieid ieid of type type.
+  # if user doesn't have permission, or if no such request exists, returns nil.
+  
+  def self.query_request requesting_user, ieid, type
+    request = Request.first(:ieid => ieid, :request_type => type, :status => :enqueued)
+
+    # if user is not an operator, check if account of requesting user matches account of submitting user
+    
+    if request and requesting_user.is_operator == false
+      original_user = User.get(request.user_id)
+      return nil unless request.user.account == original_user.account
+    else
+      return request
+    end
+  end
 
   private
 

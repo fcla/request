@@ -273,4 +273,18 @@ describe PersistRequest do
     history_record.timestamp.to_s.should == now.iso8601
   end
 
+  it "should allow an operator to query for requests by ieid and type" do
+    op = add_op_user
+    ieid = rand(1000)
+    now = Time.now
+
+    request_id = PersistRequest.enqueue_request op, :disseminate, ieid
+
+    request = PersistRequest.query_request op, ieid, :disseminate
+
+    request.should_not == nil
+    request.id.should == request_id
+
+  end
+
 end
