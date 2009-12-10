@@ -201,4 +201,25 @@ describe PersistRequest do
     id.should == nil
   end
 
+  it "should allow an authorized operator to approve a withdrawal request" do
+    op = add_op_user
+    op2 = add_op_user
+    now = Time.now
+    ieid = rand(1000)
+
+    request_id = PersistRequest.enqueue_request op, :withdraw, ieid
+
+    history_id = PersistRequest.authorize_request(request_id, op2)
+
+    request_record = Request.get(request_id)
+    history_record = History.get(history_id)
+
+    request_record.is_authorized.should == true
+
+    history_record.user_id.should == op2.id
+    history_record.request_id.should == request_record.id
+    history_record.approval_outcome.should == :approved
+    history_record.timestamp.to_s.should == now.iso8601
+  end
+
 end

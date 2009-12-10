@@ -46,6 +46,36 @@ class PersistRequest
     end
   end
 
+  # authorize a request, and save record of authorization outcome. 
+  # returns primary key to outcome record
+  
+  def self.authorize_request request_id, authorizing_user
+    request = Request.get(request_id)
+    history = History.new
+    now = Time.now
+
+    if authorizing_user.is_operator and request.user_id != authorizing_user.id
+      request.is_authorized = true
+      approval = :approved
+    else
+      approval = :denied
+    end
+
+    history.attributes = {
+      :timestamp => now,
+      :approval_outcome => approval
+    }
+
+    authorizing_user.histories << history
+    request.histories << history
+
+    authorizing_user.save!
+    request.save!
+    history.save!
+
+    return history.id
+  end
+
   private
 
   # returns true if type is supported

@@ -10,6 +10,7 @@ class History
 
    property :id, Serial
    property :timestamp, DateTime, :nullable => false
+   property :approval_outcome, Enum[:approved, :denied]
 
    belongs_to :user
    belongs_to :request
