@@ -444,4 +444,19 @@ describe PersistRequest do
     set_of_request_ids.include?(requests[2].id).should == true
   end
 
+  it "should property return nil on a search for requests on an account with no requests" do
+    op = add_op_user
+
+    requests = PersistRequest.query_ieid op, "1"
+
+    requests.length.should == 0
+  end
+
+  it "should allow privileged users to query all requests in a given ieid" do
+    pending "integration to service that knows what account a given ieid belongs to"
+  end
+
+  it "should not allow non-privileged users to query all requests in a given ieid" do
+    pending "integration to service that knows what account a given ieid belongs to"
+  end
 end

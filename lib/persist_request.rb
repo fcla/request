@@ -122,10 +122,6 @@ class PersistRequest
   end
 
   def self.query_ieid requesting_user, ieid
-    if requesting_user.is_operator == false and account != requesting_user.account
-        return nil
-    end
-
     return Request.all(:ieid => ieid)
   end
 
