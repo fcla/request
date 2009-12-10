@@ -99,7 +99,7 @@ class PersistRequest
   end
 
   # if one exists, deletes any pending request associated with ieid ieid of type type.
-  # if user doesn't have permission, or if no such request exists, returns nil.
+  # if user doesn't have authorization, or if no such request exists, returns nil.
   
   def self.delete_request requesting_user, ieid, type
     request = query_request requesting_user, ieid, type
@@ -107,6 +107,17 @@ class PersistRequest
     return nil unless request
 
     return request.destroy!
+  end
+
+  # returns the set of all requests (pending and not) for a given account
+  # returns nil if user does not have authorization, or if result set is empty
+  
+  def self.query_account requesting_user, account
+    if requesting_user.is_operator == false and request.account != requesting_user.account
+        return nil
+    end
+
+    return Request.all(:account => account)
   end
 
   private

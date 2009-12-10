@@ -350,4 +350,29 @@ describe PersistRequest do
     Request.get(request_id).id.should == request_id
   end
 
+  it "should allow operators to query all requests in a given account" do
+    op = add_op_user
+
+    ieid1 = rand(1000)
+    ieid2 = rand(1000)
+    ieid3 = rand(1000)
+    ieid4 = rand(1000)
+
+    request_id1 = PersistRequest.enqueue_request op, :disseminate, ieid1
+    request_id2 = PersistRequest.enqueue_request op, :disseminate, ieid2
+    request_id3 = PersistRequest.enqueue_request op, :disseminate, ieid3
+    request_id4 = PersistRequest.enqueue_request op, :disseminate, ieid4
+
+    set_of_request_ids = [request_id1, request_id2, request_id3, request_id4]
+
+    requests = PersistRequest.query_account op, "FDA"
+
+    requests.length.should == 4
+
+    set_of_request_ids.include?(requests[0].id).should == true
+    set_of_request_ids.include?(requests[1].id).should == true
+    set_of_request_ids.include?(requests[2].id).should == true
+    set_of_request_ids.include?(requests[3].id).should == true
+  end
+
 end
