@@ -14,7 +14,9 @@ class PersistRequest
     # raise error if specified type is not supported
     raise InvalidRequestType, "#{type} is not a supported request type" unless supported? type
 
-    # authorization
+    # if request already enqueued or in process for given ieid, refuse to enqueue new request
+    
+    return nil if already_enqueued? ieid, type
 
     if authorized_to_submit? user, type
       r = Request.new
@@ -76,6 +78,8 @@ class PersistRequest
     return history.id
   end
 
+  # query a request by type and ieid
+
   private
 
   # returns true if type is supported
@@ -93,6 +97,10 @@ class PersistRequest
     return true if type == :peek and user.can_peek
 
     return false
+  end
+
+  def self.already_enqueued? ieid, type
+    Request.first(:ieid => ieid, :request_type => type, :status => :enqueued)
   end
 
 end

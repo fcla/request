@@ -201,6 +201,17 @@ describe PersistRequest do
     id.should == nil
   end
 
+  it "should not enqueue a request if a request of that type is already enqueued for a given ieid" do
+    op = add_op_user
+    ieid = rand(1000)
+    now = Time.now
+
+    id = PersistRequest.enqueue_request op, :disseminate, ieid
+    id2 = PersistRequest.enqueue_request op, :disseminate, ieid
+    
+    id2.should == nil
+  end
+
   it "should allow an authorized operator to approve a withdrawal request" do
     op = add_op_user
     op2 = add_op_user
