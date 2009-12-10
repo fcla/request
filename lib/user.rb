@@ -14,4 +14,7 @@ class User
    property :can_disseminate, Boolean, :nullable => false
    property :can_withdraw, Boolean, :nullable => false
    property :can_peek, Boolean, :nullable => false
+
+   has n, :requests
+   has n, :histories
 end

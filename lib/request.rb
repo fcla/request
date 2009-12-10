@@ -15,4 +15,6 @@ class Request
    property :request_type, Enum[:disseminate, :withdraw, :peek]
 
    belongs_to :user
+
+   has n, :histories
 end
