@@ -80,4 +80,21 @@ describe PersistRequest do
     just_added.status.should == :enqueued
     just_added.request_type.should == :disseminate
   end
+
+  it "should enqueue a new withdraw request requested by an operator" do
+    op = add_op_user
+    ieid = rand(1000)
+    now = Time.now
+
+    id = @request.enqueue_request op, :withdraw, ieid
+    
+    just_added = Request.get(id)
+
+    just_added.should_not == nil
+    just_added.ieid.should == ieid.to_s
+    just_added.timestamp.to_s.should == now.iso8601
+    just_added.is_authorized.should == false
+    just_added.status.should == :enqueued
+    just_added.request_type.should == :withdraw
+  end
 end
