@@ -9,7 +9,7 @@ class PersistRequest
   # enqueues a new request. 
   # If authorized, returns the id of the new request. Otherwise, returns nil
 
-  def enqueue_request user, type, ieid
+  def self.enqueue_request user, type, ieid
 
     # raise error if specified type is not supported
     raise InvalidRequestType, "#{type} is not a supported request type" unless supported? type
@@ -49,11 +49,11 @@ class PersistRequest
   private
 
   # returns true if type is supported
-  def supported? type
+  def self.supported? type
     type == :withdraw or type == :disseminate or type == :peek
   end
 
-  def authorized_to_submit? user, type
+  def self.authorized_to_submit? user, type
     return true if user.is_operator
 
     return true if type == :disseminate and user.can_disseminate

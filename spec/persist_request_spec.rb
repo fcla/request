@@ -4,8 +4,6 @@ require 'pp'
 describe PersistRequest do
 
   before(:each) do
-    @request = PersistRequest.new
-
     DataMapper.setup(:default, "sqlite3://#{Dir.pwd}/data/request.db")
     DataMapper.auto_migrate!
   end
@@ -69,7 +67,7 @@ describe PersistRequest do
     ieid = rand(1000)
     now = Time.now
 
-    id = @request.enqueue_request op, :disseminate, ieid
+    id = PersistRequest.enqueue_request op, :disseminate, ieid
     
     just_added = Request.get(id)
 
@@ -86,7 +84,7 @@ describe PersistRequest do
     ieid = rand(1000)
     now = Time.now
 
-    id = @request.enqueue_request op, :withdraw, ieid
+    id = PersistRequest.enqueue_request op, :withdraw, ieid
     
     just_added = Request.get(id)
 
@@ -103,7 +101,7 @@ describe PersistRequest do
     ieid = rand(1000)
     now = Time.now
 
-    id = @request.enqueue_request op, :peek, ieid
+    id = PersistRequest.enqueue_request op, :peek, ieid
     
     just_added = Request.get(id)
 
@@ -119,7 +117,7 @@ describe PersistRequest do
     op = add_op_user
     ieid = rand(1000)
 
-    lambda { id = @request.enqueue_request op, :foo, ieid }.should raise_error(InvalidRequestType)
+    lambda { id = PersistRequest.enqueue_request op, :foo, ieid }.should raise_error(InvalidRequestType)
   end
 
   it "should enqueue a new disseminate request requested by a privileged user" do
@@ -127,7 +125,7 @@ describe PersistRequest do
     ieid = rand(1000)
     now = Time.now
 
-    id = @request.enqueue_request priv_user, :peek, ieid
+    id = PersistRequest.enqueue_request priv_user, :peek, ieid
     
     just_added = Request.get(id)
 
@@ -144,7 +142,7 @@ describe PersistRequest do
     ieid = rand(1000)
     now = Time.now
 
-    id = @request.enqueue_request priv_user, :withdraw, ieid
+    id = PersistRequest.enqueue_request priv_user, :withdraw, ieid
 
     just_added = Request.get(id)
 
@@ -161,7 +159,7 @@ describe PersistRequest do
     ieid = rand(1000)
     now = Time.now
 
-    id = @request.enqueue_request priv_user, :peek, ieid
+    id = PersistRequest.enqueue_request priv_user, :peek, ieid
 
     just_added = Request.get(id)
 
@@ -178,7 +176,7 @@ describe PersistRequest do
     ieid = rand(1000)
     now = Time.now
 
-    id = @request.enqueue_request non_priv_user, :disseminate, ieid
+    id = PersistRequest.enqueue_request non_priv_user, :disseminate, ieid
 
     id.should == nil
   end
