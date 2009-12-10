@@ -97,4 +97,46 @@ describe PersistRequest do
     just_added.status.should == :enqueued
     just_added.request_type.should == :withdraw
   end
+
+  it "should enqueue a new peek request requested by an operator" do
+    op = add_op_user
+    ieid = rand(1000)
+    now = Time.now
+
+    id = @request.enqueue_request op, :peek, ieid
+    
+    just_added = Request.get(id)
+
+    just_added.should_not == nil
+    just_added.ieid.should == ieid.to_s
+    just_added.timestamp.to_s.should == now.iso8601
+    just_added.is_authorized.should == true
+    just_added.status.should == :enqueued
+    just_added.request_type.should == :peek
+  end
+
+  it "should raise error if attempting to enqueue unknown request type" do
+    op = add_op_user
+    ieid = rand(1000)
+
+    lambda { id = @request.enqueue_request op, :foo, ieid }.should raise_error(InvalidRequestType)
+  end
+
+
+  it "should enqueue a new disseminate request requested by a privileged user" do
+    priv_user = add_privileged_user
+    ieid = rand(1000)
+    now = Time.now
+
+    id = @request.enqueue_request priv_user, :peek, ieid
+    
+    just_added = Request.get(id)
+
+    just_added.should_not == nil
+    just_added.ieid.should == ieid.to_s
+    just_added.timestamp.to_s.should == now.iso8601
+    just_added.is_authorized.should == true
+    just_added.status.should == :enqueued
+    just_added.request_type.should == :peek
+  end
 end

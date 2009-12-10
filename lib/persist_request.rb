@@ -9,6 +9,9 @@ class PersistRequest
     r = Request.new
     now = Time.now
 
+    # raise error if specified type is not supported
+    raise InvalidRequestType, "#{type} is not a supported request type" unless supported? type
+
     # if the request type is withdrawal, it needs to be authorized. Otherwise, it doesn't.
     if type == :withdraw
       auth = false
@@ -30,5 +33,12 @@ class PersistRequest
     user.save!
 
     return r.id
+  end
+
+  private
+
+  # returns true if type is supported
+  def supported? type
+    type == :withdraw or type == :disseminate or type == :peek
   end
 end
