@@ -312,5 +312,42 @@ describe PersistRequest do
     request.should == nil
   end
 
+  it "should allow an operator to delete a request by type and ieid" do
+    op = add_op_user
+    ieid = rand(1000)
+    
+    request_id = PersistRequest.enqueue_request op, :disseminate, ieid
+
+    outcome = PersistRequest.delete_request op, ieid, :disseminate
+
+    outcome.should == true
+    Request.get(request_id).should == nil
+  end
+
+  it "should allow an authorized user to delete a request by type and ieid" do
+    user = add_privileged_user
+    ieid = rand(1000)
+    
+    request_id = PersistRequest.enqueue_request user, :disseminate, ieid
+
+    outcome = PersistRequest.delete_request user, ieid, :disseminate
+
+    outcome.should == true
+    Request.get(request_id).should == nil
+  end
+
+  it "should not allow an non-authorized user to delete requests by ieid and type" do
+    user = add_privileged_user
+    user2 = add_non_privileged_user "FOO"
+    ieid = rand(1000)
+    now = Time.now
+
+    request_id = PersistRequest.enqueue_request user, :disseminate, ieid
+
+    request = PersistRequest.delete_request user2, ieid, :disseminate
+
+    request.should == nil
+    Request.get(request_id).id.should == request_id
+  end
 
 end

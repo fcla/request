@@ -99,6 +99,17 @@ class PersistRequest
     end
   end
 
+  # if one exists, deletes any pending request associated with ieid ieid of type type.
+  # if user doesn't have permission, or if no such request exists, returns nil.
+  
+  def self.delete_request requesting_user, ieid, type
+    request = query_request requesting_user, ieid, type
+
+    return nil unless request
+
+    return request.destroy!
+  end
+
   private
 
   # returns true if type is supported
