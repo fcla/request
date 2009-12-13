@@ -48,8 +48,12 @@ post '/requests/:ieid/:type' do
   u = get_user
 
   # enqueue request
-  RequestHandler.enqueue_request u, get_type(params[:type]), params[:ieid] 
-  
+  begin
+    RequestHandler.enqueue_request u, get_type(params[:type]), params[:ieid] 
+  rescue NotAuthorized
+    halt 403
+  end
+
   halt 201 
 end
 
@@ -59,8 +63,12 @@ get '/requests/:ieid/:type' do
   u = get_user
 
   # look up request and user objects
-  @request = RequestHandler.query_request u, params[:ieid], get_type(params[:type])
-  @user = @request.user
+  begin
+    @request = RequestHandler.query_request u, params[:ieid], get_type(params[:type])
+    @user = @request.user
+  rescue NotAuthorized
+    halt 403
+  end
 
   erb :single_request
 end
