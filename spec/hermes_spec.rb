@@ -23,7 +23,35 @@ describe "Request Service (Hermes)" do
     DataMapper.setup(:default, "sqlite3://#{Dir.pwd}/data/request.db")
     DataMapper.auto_migrate!
   end
-  
+
+   it "should return 401 if authorization missing on request submission" do
+    ieid = rand(1000)
+
+    uri = "/requests/#{ieid}/disseminate"
+
+    post uri
+    last_response.status.should == 401
+  end
+
+  it "should return 401 if authorization missing on request query" do
+    ieid = rand(1000)
+
+    uri = "/requests/#{ieid}/disseminate"
+
+    get uri
+    last_response.status.should == 401
+  end
+
+  it "should return 401 if authorization missing on request deletion" do
+    ieid = rand(1000)
+
+    uri = "/requests/#{ieid}/disseminate"
+
+    delete uri
+    last_response.status.should == 401
+  end
+
+ 
   it "should return 201 on authorized dissemination request submission from valid user" do
     ieid = rand(1000)
     user = add_op_user 
@@ -54,24 +82,6 @@ describe "Request Service (Hermes)" do
     response_doc.root["requesting_user"].should == user.username
   end
 
-  it "should return 401 if authorization missing on request submission" do
-    ieid = rand(1000)
-
-    uri = "/requests/#{ieid}/disseminate"
-
-    post uri
-    last_response.status.should == 401
-  end
-
-  it "should return 401 if authorization missing on request query" do
-    ieid = rand(1000)
-
-    uri = "/requests/#{ieid}/disseminate"
-
-    get uri
-    last_response.status.should == 401
-  end
-
   it "should return 403 on unauthorized dissemination request submission from valid user" do
     ieid = rand(1000)
     user = add_non_privileged_user
@@ -92,6 +102,44 @@ describe "Request Service (Hermes)" do
     post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
 
     get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    last_response.status.should == 403
+  end
+
+  it "should return 200 on authorized dissemination request deletion from valid user" do
+    ieid = rand(1000)
+    user = add_op_user 
+
+    uri = "/requests/#{ieid}/disseminate"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+    delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    last_response.status.should == 200
+  end
+
+  it "should delete exposed resource after successful dissemination request deletion" do
+    ieid = rand(1000)
+    user = add_op_user 
+
+    uri = "/requests/#{ieid}/disseminate"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+    delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    last_response.status.should == 404
+  end
+
+  it "should return 404 on unauthorized dissemination request deletion from valid user" do
+    ieid = rand(1000)
+    user = add_non_privileged_user "FOO"
+    op = add_op_user
+
+    uri = "/requests/#{ieid}/disseminate"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+    delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
 
     last_response.status.should == 403
   end

@@ -65,10 +65,27 @@ get '/requests/:ieid/:type' do
   # look up request and user objects
   begin
     @request = RequestHandler.query_request u, params[:ieid], get_type(params[:type])
-    @user = @request.user
+
+    if @request
+      @user = @request.user
+    else
+      halt 404
+    end
   rescue NotAuthorized
     halt 403
   end
 
   erb :single_request
+end
+
+delete '/requests/:ieid/:type' do
+  halt 401 unless credentials?
+
+  u = get_user
+
+  begin
+    RequestHandler.delete_request u, params[:ieid], get_type(params[:type])
+  rescue NotAuthorized
+    halt 403
+  end
 end
