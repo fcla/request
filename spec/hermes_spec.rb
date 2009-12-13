@@ -4,6 +4,7 @@ require 'sinatra'
 require 'hermes'
 require 'helper'
 require 'base64'
+require 'libxml'
 
 require 'pp'
 
@@ -23,7 +24,7 @@ describe "Request Service (Hermes)" do
     DataMapper.auto_migrate!
   end
   
-  it "should return 201 on authorized dissemination request from valid user" do
+  it "should return 201 on authorized dissemination request submission from valid user" do
     ieid = rand(1000)
     user = add_op_user 
 
@@ -31,6 +32,26 @@ describe "Request Service (Hermes)" do
 
     post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
     last_response.status.should == 201
+  end
+
+  it "should expose a request resource on authorized disseimation request submission from valid user" do
+    ieid = rand(1000)
+    user = add_op_user 
+
+    uri = "/requests/#{ieid}/disseminate"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+    last_response.status.should == 200
+
+    # TODO: add timestamp check
+    response_doc = LibXML::XML::Document.string last_response.body
+
+    response_doc.root["request_type"].should == "disseminate"
+    response_doc.root["ieid"].should == ieid.to_s
+    response_doc.root["authorized"].should == "true"
+    response_doc.root["requesting_user"].should == user.username
   end
 
   def encode_credentials(username, password)
