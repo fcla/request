@@ -51,7 +51,8 @@ describe "Request Service (Hermes)" do
     last_response.status.should == 401
   end
 
- 
+  ###### DISSEMINATE
+
   it "should return 201 on authorized dissemination request submission from valid user" do
     ieid = rand(1000)
     user = add_op_user 
@@ -137,6 +138,100 @@ describe "Request Service (Hermes)" do
     op = add_op_user
 
     uri = "/requests/#{ieid}/disseminate"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+    delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    last_response.status.should == 403
+  end
+
+  ###### WITHDRAW
+
+  it "should return 201 on authorized withdrawal request submission from valid user" do
+    ieid = rand(1000)
+    user = add_op_user 
+
+    uri = "/requests/#{ieid}/withdraw"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+    last_response.status.should == 201
+  end
+
+  it "should expose a request resource on authorized withdrawal request submission from valid user" do
+    ieid = rand(1000)
+    user = add_op_user 
+
+    uri = "/requests/#{ieid}/withdraw"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+    last_response.status.should == 200
+
+    # TODO: add timestamp check
+    response_doc = LibXML::XML::Document.string last_response.body
+
+    response_doc.root["request_type"].should == "withdraw"
+    response_doc.root["ieid"].should == ieid.to_s
+    response_doc.root["authorized"].should == "false"
+    response_doc.root["requesting_user"].should == user.username
+  end
+
+  it "should return 403 on unauthorized withdrawal request submission from valid user" do
+    ieid = rand(1000)
+    user = add_non_privileged_user
+
+    uri = "/requests/#{ieid}/withdraw"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+    last_response.status.should == 403
+  end
+
+  it "should return 403 on unauthorized withdrawal request query from valid user" do
+    ieid = rand(1000)
+    user = add_non_privileged_user "FOO"
+    op = add_op_user
+
+    uri = "/requests/#{ieid}/withdraw"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    last_response.status.should == 403
+  end
+
+  it "should return 200 on authorized withdrawal request deletion from valid user" do
+    ieid = rand(1000)
+    user = add_op_user 
+
+    uri = "/requests/#{ieid}/withdraw"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+    delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    last_response.status.should == 200
+  end
+
+  it "should delete exposed resource after successful withdraw request deletion" do
+    ieid = rand(1000)
+    user = add_op_user 
+
+    uri = "/requests/#{ieid}/withdraw"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+    delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    last_response.status.should == 404
+  end
+
+  it "should return 404 on unauthorized withdraw request deletion from valid user" do
+    ieid = rand(1000)
+    user = add_non_privileged_user "FOO"
+    op = add_op_user
+
+    uri = "/requests/#{ieid}/withdraw"
 
     post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
     delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}

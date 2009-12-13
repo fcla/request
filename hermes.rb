@@ -36,6 +36,7 @@ helpers do
   # returns appropriate symbol based on type portion of uri
   def get_type uri_type_string
     return :disseminate if uri_type_string == "disseminate"
+    return :withdraw if uri_type_string == "withdraw"
   end
 end
 
