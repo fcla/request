@@ -54,6 +54,24 @@ describe "Request Service (Hermes)" do
     response_doc.root["requesting_user"].should == user.username
   end
 
+  it "should return 401 if authorization missing on request submission" do
+    ieid = rand(1000)
+
+    uri = "/requests/#{ieid}/disseminate"
+
+    post uri
+    last_response.status.should == 401
+  end
+
+  it "should return 401 if authorization missing on request query" do
+    ieid = rand(1000)
+
+    uri = "/requests/#{ieid}/disseminate"
+
+    get uri
+    last_response.status.should == 401
+  end
+
   def encode_credentials(username, password)
     "Basic " + Base64.encode64("#{username}:#{password}")
   end

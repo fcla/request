@@ -42,6 +42,7 @@ end
 # handle post requests to create new dissemination requests
 
 post '/requests/:ieid/:type' do
+  halt 401 unless credentials? 
 
   # get user credentials and use them to get a user object
   u = get_user
@@ -53,6 +54,8 @@ post '/requests/:ieid/:type' do
 end
 
 get '/requests/:ieid/:type' do
+  halt 401 unless credentials? 
+
   u = get_user
 
   # look up request and user objects
