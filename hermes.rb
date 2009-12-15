@@ -41,7 +41,9 @@ helpers do
   end
 end
 
-# handle post requests to create new dissemination requests
+# ***ROUTES***
+
+# handle post requests for creation of single package request resource
 
 post '/requests/:ieid/:type' do
   halt 401 unless credentials? 
@@ -60,6 +62,8 @@ post '/requests/:ieid/:type' do
 
   halt 201 
 end
+
+# handle get requests on single package request resources
 
 get '/requests/:ieid/:type' do
   halt 401 unless credentials? 
@@ -82,6 +86,7 @@ get '/requests/:ieid/:type' do
   erb :single_request
 end
 
+# handle delete requests on single package request resources
 delete '/requests/:ieid/:type' do
   halt 401 unless credentials?
 
@@ -89,6 +94,22 @@ delete '/requests/:ieid/:type' do
 
   begin
     RequestHandler.delete_request u, params[:ieid], get_type(params[:type])
+  rescue NotAuthorized
+    halt 403
+  end
+end
+
+post '/requests/:ieid/:type/approve' do
+  halt 401 unless credentials?
+
+  u = get_user
+
+  begin
+    request = RequestHandler.query_request u, params[:ieid], get_type(params[:type])
+
+    halt 404 if request == nil
+
+    RequestHandler.authorize_request request.id, u
   rescue NotAuthorized
     halt 403
   end

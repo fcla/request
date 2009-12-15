@@ -359,6 +359,89 @@ describe "Request Service (Hermes)" do
     last_response.status.should == 403
   end
 
+  ###### Approval Requests
+  
+  it "should return 200 in response to a valid withdraw authorization request" do
+    ieid = rand(1000)
+    user = add_privileged_user
+    op = add_op_user
+
+    uri = "/requests/#{ieid}/withdraw"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    uri = "/requests/#{ieid}/withdraw/approve"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    last_response.status.should == 200
+  end
+
+  it "should set package request is_authorized state to true after a valid authorization request on it" do
+    ieid = rand(1000)
+    user = add_privileged_user
+    op = add_op_user
+
+    uri = "/requests/#{ieid}/withdraw"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    uri = "/requests/#{ieid}/withdraw/approve"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    uri = "/requests/#{ieid}/withdraw"
+
+    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    response_doc = LibXML::XML::Document.string last_response.body
+
+    response_doc.root["request_type"].should == "withdraw"
+    response_doc.root["ieid"].should == ieid.to_s
+    response_doc.root["authorized"].should == "true"
+  end
+
+  it "should return 403 in response to a withdraw authorization request made by a non-operator" do
+    ieid = rand(1000)
+    user = add_privileged_user
+    op = add_op_user
+
+    uri = "/requests/#{ieid}/withdraw"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    uri = "/requests/#{ieid}/withdraw/approve"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    last_response.status.should == 403
+  end
+
+  it "should return 403 in response to a withdraw authorization request made by the same user that requested the withdrawal" do
+    ieid = rand(1000)
+    op = add_op_user
+
+    uri = "/requests/#{ieid}/withdraw"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    uri = "/requests/#{ieid}/withdraw/approve"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    last_response.status.should == 403
+  end
+
+  it "should return 404 in response to a withdrawal authorization request to an ieid with no pending withdrawal package request" do
+    ieid = rand(1000)
+    op = add_op_user
+
+    uri = "/requests/#{ieid}/withdraw/approve"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    last_response.status.should == 404
+  end
 
   def encode_credentials(username, password)
     "Basic " + Base64.encode64("#{username}:#{password}")
