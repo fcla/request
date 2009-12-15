@@ -497,6 +497,7 @@ describe "Request Service (Hermes)" do
     response_doc.root["ieid"].should == ieid.to_s
 
     children = response_doc.root.children
+    children.length.should == 3
 
     children[0]["request_id"].should == "1"
     children[0]["request_type"].should == "disseminate"
@@ -515,6 +516,19 @@ describe "Request Service (Hermes)" do
     children[2]["requesting_user"].should == op.username
     children[2]["authorized"].should == "true"
     children[2]["ieid"].should == ieid.to_s
+  end
+
+  it "should return an XML document with all requests for a given ieid in response to get on ieid resource (even if there are no pending package requests)" do
+    ieid = rand(1000)
+    op = add_op_user
+
+    uri_ieid_query = "/requests/#{ieid}"
+
+    get uri_ieid_query, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    response_doc = LibXML::XML::Document.string last_response.body
+
+    response_doc.root["ieid"].should == ieid.to_s
   end
 
   def encode_credentials(username, password)
