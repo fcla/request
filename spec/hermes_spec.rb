@@ -22,9 +22,11 @@ describe "Request Service (Hermes)" do
   before(:each) do
     DataMapper.setup(:default, "sqlite3://#{Dir.pwd}/data/request.db")
     DataMapper.auto_migrate!
+
+    LibXML::XML.default_keep_blanks = false
   end
 
-   it "should return 401 if authorization missing on request submission" do
+   it "should return 401 if http authorization missing on request submission" do
     ieid = rand(1000)
 
     uri = "/requests/#{ieid}/disseminate"
@@ -33,7 +35,7 @@ describe "Request Service (Hermes)" do
     last_response.status.should == 401
   end
 
-  it "should return 401 if authorization missing on request query" do
+  it "should return 401 if http authorization missing on request query" do
     ieid = rand(1000)
 
     uri = "/requests/#{ieid}/disseminate"
@@ -42,12 +44,30 @@ describe "Request Service (Hermes)" do
     last_response.status.should == 401
   end
 
-  it "should return 401 if authorization missing on request deletion" do
+  it "should return 401 if http authorization missing on request deletion" do
     ieid = rand(1000)
 
     uri = "/requests/#{ieid}/disseminate"
 
     delete uri
+    last_response.status.should == 401
+  end
+
+  it "should return 401 if http authorization missing on request approval" do
+    ieid = rand(1000)
+
+    uri = "/requests/#{ieid}/withdraw/approve"
+
+    post uri
+    last_response.status.should == 401
+  end
+
+  it "should return 401 if http authorization missing on query on ieid" do
+    ieid = rand(1000)
+
+    uri = "/requests/#{ieid}"
+
+    get uri
     last_response.status.should == 401
   end
 
@@ -441,6 +461,60 @@ describe "Request Service (Hermes)" do
     post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
 
     last_response.status.should == 404
+  end
+
+  ########## Query on IEID resource
+
+  it "should return 200 OK in response to get on ieid resource" do
+    ieid = rand(1000)
+    op = add_op_user
+
+    uri = "/requests/#{ieid}"
+
+    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    last_response.status.should == 200
+  end
+
+  it "should return an XML document with all requests for a given ieid in response to get on ieid resource" do
+    ieid = rand(1000)
+    op = add_op_user
+
+    uri_disseminate = "/requests/#{ieid}/disseminate"
+    uri_withdraw = "/requests/#{ieid}/withdraw"
+    uri_peek = "/requests/#{ieid}/peek"
+
+    post uri_disseminate, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+    post uri_withdraw, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+    post uri_peek, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    uri_ieid_query = "/requests/#{ieid}"
+
+    get uri_ieid_query, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    response_doc = LibXML::XML::Document.string last_response.body
+
+    response_doc.root["ieid"].should == ieid.to_s
+
+    children = response_doc.root.children
+
+    children[0]["request_id"].should == "1"
+    children[0]["request_type"].should == "disseminate"
+    children[0]["requesting_user"].should == op.username
+    children[0]["authorized"].should == "true"
+    children[0]["ieid"].should == ieid.to_s
+
+    children[1]["request_id"].should == "2"
+    children[1]["request_type"].should == "withdraw"
+    children[1]["requesting_user"].should == op.username
+    children[1]["authorized"].should == "false"
+    children[1]["ieid"].should == ieid.to_s
+
+    children[2]["request_id"].should == "3"
+    children[2]["request_type"].should == "peek"
+    children[2]["requesting_user"].should == op.username
+    children[2]["authorized"].should == "true"
+    children[2]["ieid"].should == ieid.to_s
   end
 
   def encode_credentials(username, password)

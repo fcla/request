@@ -87,6 +87,7 @@ get '/requests/:ieid/:type' do
 end
 
 # handle delete requests on single package request resources
+
 delete '/requests/:ieid/:type' do
   halt 401 unless credentials?
 
@@ -98,6 +99,8 @@ delete '/requests/:ieid/:type' do
     halt 403
   end
 end
+
+# handle authorization requests on single package request resource
 
 post '/requests/:ieid/:type/approve' do
   halt 401 unless credentials?
@@ -113,4 +116,22 @@ post '/requests/:ieid/:type/approve' do
   rescue NotAuthorized
     halt 403
   end
+end
+
+# handle queries on entire IEIDs
+
+get '/requests/:ieid' do
+  halt 401 unless credentials?
+
+  @ieid = params[:ieid]
+
+  u = get_user
+
+  begin
+    @requests_by_ieid = RequestHandler.query_ieid u, @ieid
+  rescue NotAuthorized
+    halt 403
+  end
+
+  erb :ieid_requests
 end

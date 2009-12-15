@@ -1,0 +1,13 @@
+<enqueued_requests ieid="<%= @ieid %>">
+  <% @requests_by_ieid.each do |value| %> 
+  <% user = value.user%> 
+  <request 
+    request_id="<%= value.id %>" 
+    request_type="<%= value.request_type %>" 
+    requesting_user="<%= user.username %>" 
+    authorized="<%= value.is_authorized %>" 
+    timestamp="" 
+    ieid="<%= value.ieid %>" 
+  />
+  <% end %>
+</enqueued_requests>
