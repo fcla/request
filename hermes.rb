@@ -51,10 +51,12 @@ post '/requests/:ieid/:type' do
 
   # enqueue request
   begin
-    RequestHandler.enqueue_request u, get_type(params[:type]), params[:ieid] 
+    enqueued = RequestHandler.enqueue_request u, get_type(params[:type]), params[:ieid] 
   rescue NotAuthorized
     halt 403
   end
+
+  halt 403 unless enqueued
 
   halt 201 
 end

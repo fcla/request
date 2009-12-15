@@ -333,6 +333,32 @@ describe "Request Service (Hermes)" do
     last_response.status.should == 403
   end
 
+  it "should return 403 in response to any request that already exists" do
+    ieid = rand(1000)
+    user = add_op_user 
+
+    uri = "/requests/#{ieid}/disseminate"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    last_response.status.should == 403
+
+    uri = "/requests/#{ieid}/withdraw"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    last_response.status.should == 403
+
+    uri = "/requests/#{ieid}/peek"
+
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    last_response.status.should == 403
+  end
+
 
   def encode_credentials(username, password)
     "Basic " + Base64.encode64("#{username}:#{password}")
