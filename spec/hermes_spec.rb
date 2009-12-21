@@ -102,6 +102,7 @@ describe "Request Service (Hermes)" do
   it "should expose a request resource on authorized disseimation request submission from valid user" do
     ieid = rand(1000)
     user = add_op_user 
+    now = Time.now
 
     uri = "/requests/#{ieid}/disseminate"
 
@@ -110,13 +111,13 @@ describe "Request Service (Hermes)" do
     get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
     last_response.status.should == 200
 
-    # TODO: add timestamp check
     response_doc = LibXML::XML::Document.string last_response.body
 
     response_doc.root["request_type"].should == "disseminate"
     response_doc.root["ieid"].should == ieid.to_s
     response_doc.root["authorized"].should == "true"
     response_doc.root["requesting_user"].should == user.username
+    response_doc.root["timestamp"].should == now.iso8601
   end
 
   it "should return 403 on unauthorized dissemination request submission from valid user" do
@@ -196,6 +197,7 @@ describe "Request Service (Hermes)" do
   it "should expose a request resource on authorized withdrawal request submission from valid user" do
     ieid = rand(1000)
     user = add_op_user 
+    now = Time.now
 
     uri = "/requests/#{ieid}/withdraw"
 
@@ -204,13 +206,13 @@ describe "Request Service (Hermes)" do
     get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
     last_response.status.should == 200
 
-    # TODO: add timestamp check
     response_doc = LibXML::XML::Document.string last_response.body
 
     response_doc.root["request_type"].should == "withdraw"
     response_doc.root["ieid"].should == ieid.to_s
     response_doc.root["authorized"].should == "false"
     response_doc.root["requesting_user"].should == user.username
+    response_doc.root["timestamp"].should == now.iso8601
   end
 
   it "should return 403 on unauthorized withdrawal request submission from valid user" do
@@ -290,6 +292,7 @@ describe "Request Service (Hermes)" do
   it "should expose a request resource on authorized peek request submission from valid user" do
     ieid = rand(1000)
     user = add_op_user 
+    now = Time.now
 
     uri = "/requests/#{ieid}/peek"
 
@@ -298,13 +301,13 @@ describe "Request Service (Hermes)" do
     get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
     last_response.status.should == 200
 
-    # TODO: add timestamp check
     response_doc = LibXML::XML::Document.string last_response.body
 
     response_doc.root["request_type"].should == "peek"
     response_doc.root["ieid"].should == ieid.to_s
     response_doc.root["authorized"].should == "true"
     response_doc.root["requesting_user"].should == user.username
+    response_doc.root["timestamp"].should == now.iso8601
   end
 
   it "should return 403 on unauthorized peek request submission from valid user" do
@@ -417,6 +420,7 @@ describe "Request Service (Hermes)" do
     ieid = rand(1000)
     user = add_privileged_user
     op = add_op_user
+    now = Time.now
 
     uri = "/requests/#{ieid}/withdraw"
 
@@ -435,6 +439,7 @@ describe "Request Service (Hermes)" do
     response_doc.root["request_type"].should == "withdraw"
     response_doc.root["ieid"].should == ieid.to_s
     response_doc.root["authorized"].should == "true"
+    response_doc.root["timestamp"].should == now.iso8601
   end
 
   it "should return 403 in response to a withdraw authorization request made by a non-operator" do
@@ -495,6 +500,7 @@ describe "Request Service (Hermes)" do
   it "should return an XML document with all requests for a given ieid in response to GET on ieid resource" do
     ieid = rand(1000)
     op = add_op_user
+    now = Time.now
 
     uri_disseminate = "/requests/#{ieid}/disseminate"
     uri_withdraw = "/requests/#{ieid}/withdraw"
@@ -520,18 +526,21 @@ describe "Request Service (Hermes)" do
     children[0]["requesting_user"].should == op.username
     children[0]["authorized"].should == "true"
     children[0]["ieid"].should == ieid.to_s
+    children[0]["timestamp"].should == now.iso8601
 
     children[1]["request_id"].should == "2"
     children[1]["request_type"].should == "withdraw"
     children[1]["requesting_user"].should == op.username
     children[1]["authorized"].should == "false"
     children[1]["ieid"].should == ieid.to_s
+    children[1]["timestamp"].should == now.iso8601
 
     children[2]["request_id"].should == "3"
     children[2]["request_type"].should == "peek"
     children[2]["requesting_user"].should == op.username
     children[2]["authorized"].should == "true"
     children[2]["ieid"].should == ieid.to_s
+    children[2]["timestamp"].should == now.iso8601
   end
 
   it "should return an XML document with all requests for a given ieid in response to get on ieid resource (even if there are no pending package requests)" do
@@ -561,6 +570,7 @@ describe "Request Service (Hermes)" do
 
   it "should return an XML document with all the requests for a given account in response to get on query by account resource" do
     op = add_op_user
+    now = Time.now
 
     ieid1 = rand(1000)
     ieid2 = rand(1000)
@@ -599,10 +609,12 @@ describe "Request Service (Hermes)" do
 
         ([ieid2, ieid3].include? req["ieid"].to_i).should == true
         req["request_type"].should == "disseminate"
+        req["timestamp"].should == now.iso8601
       elsif req_children.length == 3
         while req = req_children.shift
           ieid1.to_s.should == req["ieid"]
           (["disseminate", "withdraw", "peek"].include? req["request_type"]).should == true
+          req["timestamp"].should == now.iso8601
         end
       else
         raise StandardError, "Expecting nodes with 1 or 3 children"
@@ -799,7 +811,6 @@ describe "Request Service (Hermes)" do
 
     last_response.status.should == 200
   end
-
 
   # query by parameters
 
