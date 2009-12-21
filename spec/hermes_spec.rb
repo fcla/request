@@ -74,7 +74,7 @@ describe "Request Service (Hermes)" do
   it "should return 401 if http authorization missing on query by account name" do
     ieid = rand(1000)
 
-    uri = "/requests_by_account/FDA"
+    uri = "/query_requests?account=FDA"
 
     get uri
     last_response.status.should == 401
@@ -552,7 +552,7 @@ describe "Request Service (Hermes)" do
   it "should return 200 OK in response to GET on requests_by_account resource" do
     op = add_op_user
 
-    uri = "/requests_by_account/FDA"
+    uri = "/query_requests?account=FDA"
 
     get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
 
@@ -578,7 +578,7 @@ describe "Request Service (Hermes)" do
     post uri4, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
     post uri5, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
 
-    uri = "/requests_by_account/FDA"
+    uri = "/query_requests?account=FDA"
 
     get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
 
@@ -613,12 +613,23 @@ describe "Request Service (Hermes)" do
   it "should return 403 in response to GET on query by account resource made by unauthorized user" do
     user = add_non_privileged_user "FOO"
 
-    uri = "/requests_by_account/FDA"
+    uri = "/query_requests?account=FDA"
 
     get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
 
     last_response.status.should == 403
   end
+
+  it "should return 400 in response to GET on query by account if account is missing" do
+    user = add_privileged_user
+
+    uri = "/query_requests"
+
+    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    last_response.status.should == 400
+  end
+
 
   # post multiple requests with xml document
   
@@ -778,6 +789,17 @@ describe "Request Service (Hermes)" do
       child["error"].should == "not_authorized"
     end
   end
+
+  it "should return 200 OK in response to GET on query_requests resource" do
+    op = add_op_user
+
+    uri = "/query_requests?account=FDA"
+
+    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    last_response.status.should == 200
+  end
+
 
   # query by parameters
 

@@ -69,8 +69,6 @@ helpers do
   end
 end
 
-# ***ROUTES***
-
 # handle post requests for creation of single package request resource
 
 post '/requests/:ieid/:type' do
@@ -164,23 +162,6 @@ get '/requests/:ieid' do
   erb :ieid_requests
 end
 
-# handle queries for requests on account
-
-get '/requests_by_account/:account' do
-  halt 401 unless credentials?
-
-  u = get_user
-
-  begin
-    @account = params[:account]
-    @requests_by_account = group_by_ieid RequestHandler.query_account u, @account
-
-    erb :account_requests
-  rescue NotAuthorized
-    halt 403
-  end
-end
-
 # handles post requests for the creation of multiple request resource at once via XML
 
 post '/requests_by_xml' do
@@ -224,4 +205,25 @@ post '/requests_by_xml' do
   end
 
   erb :multiple_submission_response
+end
+
+# handles requests for queries based on parameters. 
+# TODO: this currently only works on and requires an "account" parameter. Needs to be modified to take 
+# any number/combination of parameters
+
+get '/query_requests' do
+  halt 401 unless credentials?
+
+  halt 400 unless params["account"]
+
+  u = get_user
+
+  begin
+    @account = params["account"]
+    @requests_by_account = group_by_ieid RequestHandler.query_account u, @account
+
+    erb :account_requests
+  rescue NotAuthorized
+    halt 403
+  end
 end
