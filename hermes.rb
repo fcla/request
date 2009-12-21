@@ -39,6 +39,24 @@ helpers do
     return :withdraw if uri_type_string == "withdraw"
     return :peek if uri_type_string == "peek"
   end
+
+  # organizes an array of requests grouped by account such that all requests are grouped by ieid
+  # returns a hash keyed by IEIDs, each bucket containing an array of request objects
+  def group_by_ieid array_of_requests_by_account
+    to_return = {}
+
+    while req = array_of_requests_by_account.shift
+
+      if to_return[req.ieid]
+        to_return[req.ieid].push req
+      else
+        to_return[req.ieid] = []
+        to_return[req.ieid].push req
+      end
+    end
+
+    return to_return
+  end
 end
 
 # ***ROUTES***
@@ -134,4 +152,21 @@ get '/requests/:ieid' do
   end
 
   erb :ieid_requests
+end
+
+# handle queries for requests on account
+
+get '/requests_by_account/:account' do
+  halt 401 unless credentials?
+
+  u = get_user
+
+  begin
+    @account = params[:account]
+    @requests_by_account = group_by_ieid RequestHandler.query_account u, @account
+
+    erb :account_requests
+  rescue NotAuthorized
+    halt 403
+  end
 end

@@ -71,6 +71,15 @@ describe "Request Service (Hermes)" do
     last_response.status.should == 401
   end
 
+  it "should return 401 if http authorization missing on query by account name" do
+    ieid = rand(1000)
+
+    uri = "/requests_by_account/FDA"
+
+    get uri
+    last_response.status.should == 401
+  end
+
   ###### DISSEMINATE
 
   it "should return 201 on authorized dissemination request submission from valid user" do
@@ -476,7 +485,7 @@ describe "Request Service (Hermes)" do
     last_response.status.should == 200
   end
 
-  it "should return an XML document with all requests for a given ieid in response to get on ieid resource" do
+  it "should return an XML document with all requests for a given ieid in response to GET on ieid resource" do
     ieid = rand(1000)
     op = add_op_user
 
@@ -530,6 +539,82 @@ describe "Request Service (Hermes)" do
 
     response_doc.root["ieid"].should == ieid.to_s
   end
+
+  ###### Query by account
+  
+  it "should return 200 OK in response to GET on requests_by_account resource" do
+    op = add_op_user
+
+    uri = "/requests_by_account/FDA"
+
+    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    last_response.status.should == 200
+  end
+
+  it "should return an XML document with all the requests for a given account in response to get on query by account resource" do
+    op = add_op_user
+
+    ieid1 = rand(1000)
+    ieid2 = rand(1000)
+    ieid3 = rand(1000)
+
+    uri1 = "/requests/#{ieid1}/disseminate"
+    uri2 = "/requests/#{ieid2}/disseminate"
+    uri3 = "/requests/#{ieid3}/disseminate"
+    uri4 = "/requests/#{ieid1}/withdraw"
+    uri5 = "/requests/#{ieid1}/peek"
+
+    post uri1, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+    post uri2, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+    post uri3, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+    post uri4, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+    post uri5, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    uri = "/requests_by_account/FDA"
+
+    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    # parse the XML document returned from the request service, testing the nodes for 
+    # expected stucture, attributes, and values
+
+    response_doc = LibXML::XML::Document.string last_response.body
+
+    response_doc.root["account"].should == "FDA"
+
+    ieid_children = response_doc.root.children
+
+    ieid_children.each do |ieid_child|
+      req_children = ieid_child.children
+
+      if req_children.length == 1
+        req = req_children.shift
+
+        ([ieid2, ieid3].include? req["ieid"].to_i).should == true
+        req["request_type"].should == "disseminate"
+      elsif req_children.length == 3
+        while req = req_children.shift
+          ieid1.to_s.should == req["ieid"]
+          (["disseminate", "withdraw", "peek"].include? req["request_type"]).should == true
+        end
+      else
+        raise StandardError, "Expecting nodes with 1 or 3 children"
+      end
+    end
+  end
+
+  it "should return 403 in response to GET on query by account resource made by unauthorized user" do
+    user = add_non_privileged_user "FOO"
+
+    uri = "/requests_by_account/FDA"
+
+    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    last_response.status.should == 403
+  end
+
+  # query by parameters
+  # post multiple requests with xml document
 
   def encode_credentials(username, password)
     "Basic " + Base64.encode64("#{username}:#{password}")
