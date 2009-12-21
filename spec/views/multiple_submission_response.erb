@@ -1,0 +1,11 @@
+<package_request_submission_response request_type="<%= @type %>">
+  <% @created.each do |ieid_created| %>
+     <request_recieved ieid="<%= ieid_created %>" outcome="created" />
+  <% end %>
+  <% @already_exist.each do |ieid_already_exists| %>
+     <request_recieved ieid="<%= ieid_already_exists %>" outcome="not_created" error="already_exists" />
+  <% end %>
+  <% @not_authorized.each do |ieid_not_authorized| %>
+     <request_recieved ieid="<%= ieid_not_authorized %>" outcome="not_created" error="not_authorized" />
+  <% end %>
+</package_request_submission_response>

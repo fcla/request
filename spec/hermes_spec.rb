@@ -80,6 +80,13 @@ describe "Request Service (Hermes)" do
     last_response.status.should == 401
   end
 
+  it "should return 401 if http authorization missing on multiple request submission" do
+    uri = "/requests_by_xml"
+
+    post uri
+    last_response.status.should == 401
+  end
+
   ###### DISSEMINATE
 
   it "should return 201 on authorized dissemination request submission from valid user" do
@@ -255,7 +262,7 @@ describe "Request Service (Hermes)" do
     last_response.status.should == 404
   end
 
-  it "should return 404 on unauthorized withdraw request deletion from valid user" do
+  it "should return 403 on unauthorized withdraw request deletion from valid user" do
     ieid = rand(1000)
     user = add_non_privileged_user "FOO"
     op = add_op_user
@@ -613,8 +620,166 @@ describe "Request Service (Hermes)" do
     last_response.status.should == 403
   end
 
-  # query by parameters
   # post multiple requests with xml document
+  
+  it "should return 201 CREATED in response to post to requests_by_xml resource, and create a new resource for each ieid specified" do
+    ieid1 = rand(1000)
+    ieid2 = rand(1000)
+    ieid3 = rand(1000)
+
+    op = add_op_user
+
+    doc =<<-XML_UPLOAD
+      <package_request_submission>
+        <requests type="disseminate">
+          <ieid_list>
+            <ieid>#{ieid1}</ieid>
+            <ieid>#{ieid2}</ieid>
+            <ieid>#{ieid3}</ieid>
+          </ieid_list>
+        </requests>
+      </package_request_submission>
+    XML_UPLOAD
+
+    uri = "/requests_by_xml"
+
+    post uri, doc, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    last_response.status.should == 200
+
+    uri1 = "/requests/#{ieid1}/disseminate"
+    uri2 = "/requests/#{ieid2}/disseminate"
+    uri3 = "/requests/#{ieid3}/disseminate"
+
+    get uri1, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+    last_response.status.should == 200
+
+    get uri2, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+    last_response.status.should == 200
+
+    get uri3, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+    last_response.status.should == 200
+  end
+
+  it "should return XML document correctly reporting resources created in response to POST to requests_by_xml resource" do
+    ieid1 = rand(1000)
+    ieid2 = rand(1000)
+    ieid3 = rand(1000)
+
+    op = add_op_user
+
+    doc =<<-XML_UPLOAD
+      <package_request_submission>
+        <requests type="disseminate">
+          <ieid_list>
+            <ieid>#{ieid1}</ieid>
+            <ieid>#{ieid2}</ieid>
+            <ieid>#{ieid3}</ieid>
+          </ieid_list>
+        </requests>
+      </package_request_submission>
+    XML_UPLOAD
+
+    uri = "/requests_by_xml"
+
+    post uri, doc, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    doc = LibXML::XML::Document.string last_response.body
+
+    doc.root["request_type"].should == "disseminate"
+
+    children = doc.root.children
+    children.length.should == 3
+
+    children.each do |child|
+      ([ieid1, ieid2, ieid3].include? child["ieid"].to_i).should == true
+      child["outcome"].should == "created"
+    end
+  end
+
+  it "should return XML document correctly reporting resources not created in response to POST to requests_by_xml resource (already exists)" do
+    ieid1 = rand(1000)
+    ieid2 = rand(1000)
+    ieid3 = rand(1000)
+
+    op = add_op_user
+
+    uri1 = "/requests/#{ieid1}/disseminate"
+    uri2 = "/requests/#{ieid2}/disseminate"
+    uri3 = "/requests/#{ieid3}/disseminate"
+
+    post uri1, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+    post uri2, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+    post uri3, {}, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    doc =<<-XML_UPLOAD
+      <package_request_submission>
+        <requests type="disseminate">
+          <ieid_list>
+            <ieid>#{ieid1}</ieid>
+            <ieid>#{ieid2}</ieid>
+            <ieid>#{ieid3}</ieid>
+          </ieid_list>
+        </requests>
+      </package_request_submission>
+    XML_UPLOAD
+
+    uri = "/requests_by_xml"
+
+    post uri, doc, {'HTTP_AUTHORIZATION' => encode_credentials(op.username, op.password)}
+
+    doc = LibXML::XML::Document.string last_response.body
+
+    doc.root["request_type"].should == "disseminate"
+
+    children = doc.root.children
+    children.length.should == 3
+
+    children.each do |child|
+      ([ieid1, ieid2, ieid3].include? child["ieid"].to_i).should == true
+      child["outcome"].should == "not_created"
+      child["error"].should == "already_exists"
+    end
+  end
+
+  it "should return XML document correctly reporting resources not created in response to POST to requests_by_xml resource (not authorized)" do
+    ieid1 = rand(1000)
+    ieid2 = rand(1000)
+    ieid3 = rand(1000)
+
+    user = add_non_privileged_user
+
+    doc =<<-XML_UPLOAD
+      <package_request_submission>
+        <requests type="disseminate">
+          <ieid_list>
+            <ieid>#{ieid1}</ieid>
+            <ieid>#{ieid2}</ieid>
+            <ieid>#{ieid3}</ieid>
+          </ieid_list>
+        </requests>
+      </package_request_submission>
+    XML_UPLOAD
+
+    uri = "/requests_by_xml"
+
+    post uri, doc, {'HTTP_AUTHORIZATION' => encode_credentials(user.username, user.password)}
+
+    doc = LibXML::XML::Document.string last_response.body
+
+    doc.root["request_type"].should == "disseminate"
+
+    children = doc.root.children
+    children.length.should == 3
+
+    children.each do |child|
+      ([ieid1, ieid2, ieid3].include? child["ieid"].to_i).should == true
+      child["outcome"].should == "not_created"
+      child["error"].should == "not_authorized"
+    end
+  end
+
+  # query by parameters
 
   def encode_credentials(username, password)
     "Basic " + Base64.encode64("#{username}:#{password}")

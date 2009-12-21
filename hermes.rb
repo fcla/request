@@ -3,6 +3,7 @@
 require 'sinatra'
 require 'user'
 require 'request_handler'
+require 'libxml'
 
 require 'pp'
 
@@ -56,6 +57,15 @@ helpers do
     end
 
     return to_return
+  end
+
+  # returns an body as LibXML Document object, raising exception if it cannot be parsed
+
+  def get_body_as_doc body
+    LibXML::XML.default_keep_blanks = false
+    doc = LibXML::XML::Document.string body
+
+    return doc
   end
 end
 
@@ -169,4 +179,49 @@ get '/requests_by_account/:account' do
   rescue NotAuthorized
     halt 403
   end
+end
+
+# handles post requests for the creation of multiple request resource at once via XML
+
+post '/requests_by_xml' do
+  halt 401 unless credentials?
+
+  u = get_user
+
+  @created = []
+  @already_exist = []
+  @not_authorized = []
+
+  # parse body as XML document. Returns 400 if body cannot be parsed
+  begin
+    doc = get_body_as_doc request.body.read
+  rescue => e
+    halt 400, "Unable to parse body as XML"
+  end
+
+  # determine the request type from body of request
+
+  @type = get_type doc.root.first["type"]
+  
+  # iterate over all specified ieids, creating a request for each
+
+  ieid_list_node = doc.root.first.first
+
+  ieid_list_node.children.each do |ieid_node|
+    ieid = ieid_node.first
+
+    begin
+      enqueued = RequestHandler.enqueue_request u, @type, ieid
+    rescue NotAuthorized
+      @not_authorized.push ieid
+    else
+      if enqueued
+        @created.push ieid
+      else
+        @already_exist.push ieid
+      end
+    end
+  end
+
+  erb :multiple_submission_response
 end
