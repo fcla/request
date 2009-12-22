@@ -9,7 +9,6 @@ class Dispatch
   # creates a dissemination "sub-wip" in the workspace 
 
   def self.dispatch_disseminate ieid
-
     path = File.join(WORKSPACE, ieid.to_s)
     wip = Wip.new path, PREFIX_URI
 
@@ -19,8 +18,20 @@ class Dispatch
   end
 
   def self.dispatch_peek ieid
+    path = File.join(WORKSPACE, ieid.to_s)
+    wip = Wip.new path, PREFIX_URI
+
+    wip.tags["peek_request"] = Time.now.to_s
+
+    return path
   end
 
   def self.dispatch_withdraw ieid
+    path = File.join(WORKSPACE, ieid.to_s)
+    wip = Wip.new path, PREFIX_URI
+
+    wip.tags["withdrawal_request"] = Time.now.to_s
+
+    return path
   end
 end

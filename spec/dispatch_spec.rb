@@ -19,4 +19,24 @@ describe Dispatch do
     wip = Wip.new path_to_wip, URI_PREFIX
     wip.tags["dissemination_request"].should == now
   end
+
+  it "should create a withdrawl sub-wip" do
+    ieid = rand(1000)
+    now = Time.now.to_s
+
+    path_to_wip = Dispatch.dispatch_withdraw ieid
+
+    wip = Wip.new path_to_wip, URI_PREFIX
+    wip.tags["withdrawal_request"].should == now
+  end
+
+  it "should create a peek sub-wip" do
+    ieid = rand(1000)
+    now = Time.now.to_s
+
+    path_to_wip = Dispatch.dispatch_peek ieid
+
+    wip = Wip.new path_to_wip, URI_PREFIX
+    wip.tags["peek_request"].should == now
+  end
 end
