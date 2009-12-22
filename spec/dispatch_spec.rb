@@ -10,6 +10,10 @@ describe Dispatch do
     ENV["DAITSS_WORKSPACE"] = "/tmp/d2ws"
   end
 
+  after(:each) do
+    FileUtils.rm_rf "/tmp/d2ws"
+  end
+
   it "should create a dissemination sub-wip" do
     ieid = rand(1000)
     now = Time.now.to_s
