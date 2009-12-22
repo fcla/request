@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+require 'request'
+require 'dispatch'
+
+WORKSPACE = ENV["DAITSS_WORKSPACE"]
+POLL_INTERVAL = 5
+
+Dispatch.dispatch_disseminate 10
+# poll the workspace every 5 seconds. 
+
+#while true
+  # for any request ieid for which there is no wip in the workspace, create a "sub-wip" that includes a tag file with the job to be done
+
+  #sleep 5
+#end
