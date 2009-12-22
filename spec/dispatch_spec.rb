@@ -43,4 +43,18 @@ describe Dispatch do
     wip = Wip.new path_to_wip, URI_PREFIX
     wip.tags["peek_request"].should == now
   end
+
+  it "should correctly tell when a wip for an ieid exists in the workspace" do
+    ieid = rand(1000)
+
+    path_to_wip = Dispatch.dispatch_peek ieid
+
+    Dispatch.wip_exists?(ieid).should == true
+  end
+
+  it "should correctly tell when a wip for an ieid does not exist in the workspace" do
+    ieid = rand(1000)
+
+    Dispatch.wip_exists?(ieid).should == false
+  end
 end

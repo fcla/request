@@ -34,4 +34,8 @@ class Dispatch
 
     return path
   end
+
+  def self.wip_exists? ieid
+    File.exists? File.join(WORKSPACE, ieid.to_s)
+  end
 end
