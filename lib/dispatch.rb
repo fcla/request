@@ -8,29 +8,21 @@ class Dispatch
   
   # creates a dissemination "sub-wip" in the workspace 
 
-  def self.dispatch_disseminate ieid
+  def self.dispatch_request ieid, type
     path = File.join(WORKSPACE, ieid.to_s)
     wip = Wip.new path, PREFIX_URI
 
-    wip.tags["dissemination_request"] = Time.now.to_s
+    case type
 
-    return path
-  end
-
-  def self.dispatch_peek ieid
-    path = File.join(WORKSPACE, ieid.to_s)
-    wip = Wip.new path, PREFIX_URI
-
-    wip.tags["peek_request"] = Time.now.to_s
-
-    return path
-  end
-
-  def self.dispatch_withdraw ieid
-    path = File.join(WORKSPACE, ieid.to_s)
-    wip = Wip.new path, PREFIX_URI
-
-    wip.tags["withdrawal_request"] = Time.now.to_s
+    when :disseminate
+      wip.tags["dissemination_request"] = Time.now.to_s
+    when :withdraw
+      wip.tags["withdrawal_request"] = Time.now.to_s
+    when :peek
+      wip.tags["peek_request"] = Time.now.to_s
+    else
+      raise "Unknown request type: #{type}"
+    end
 
     return path
   end

@@ -18,7 +18,7 @@ describe Dispatch do
     ieid = rand(1000)
     now = Time.now.to_s
 
-    path_to_wip = Dispatch.dispatch_disseminate ieid
+    path_to_wip = Dispatch.dispatch_request ieid, :disseminate
 
     wip = Wip.new path_to_wip, URI_PREFIX
     wip.tags["dissemination_request"].should == now
@@ -28,7 +28,7 @@ describe Dispatch do
     ieid = rand(1000)
     now = Time.now.to_s
 
-    path_to_wip = Dispatch.dispatch_withdraw ieid
+    path_to_wip = Dispatch.dispatch_request ieid, :withdraw
 
     wip = Wip.new path_to_wip, URI_PREFIX
     wip.tags["withdrawal_request"].should == now
@@ -38,7 +38,7 @@ describe Dispatch do
     ieid = rand(1000)
     now = Time.now.to_s
 
-    path_to_wip = Dispatch.dispatch_peek ieid
+    path_to_wip = Dispatch.dispatch_request ieid, :peek
 
     wip = Wip.new path_to_wip, URI_PREFIX
     wip.tags["peek_request"].should == now
@@ -47,7 +47,7 @@ describe Dispatch do
   it "should correctly tell when a wip for an ieid exists in the workspace" do
     ieid = rand(1000)
 
-    path_to_wip = Dispatch.dispatch_peek ieid
+    path_to_wip = Dispatch.dispatch_request ieid, :disseminate
 
     Dispatch.wip_exists?(ieid).should == true
   end
