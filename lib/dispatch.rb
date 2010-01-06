@@ -5,6 +5,7 @@ class Dispatch
 
   WORKSPACE = ENV["DAITSS_WORKSPACE"]
   PREFIX_URI = "test:/"
+  DISSEMINATE_DROP_PATH = "/tmp/disseminations/"
   
   # creates a dissemination "sub-wip" in the workspace 
 
@@ -15,6 +16,7 @@ class Dispatch
     case type
 
     when :disseminate
+      wip.tags["drop_path"] = DISSEMINATE_DROP_PATH
       wip.tags["dissemination_request"] = Time.now.to_s
     when :withdraw
       wip.tags["withdrawal_request"] = Time.now.to_s
