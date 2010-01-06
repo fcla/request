@@ -1,0 +1,17 @@
+<account_requests account="<%= @account %>">
+  <% @requests_by_account.each do |key, ieid_array| %>
+  <enqueued_requests ieid="<%= key %>">
+    <% ieid_array.each do |value| %> 
+    <% user = value.user%> 
+    <request 
+      request_id="<%= value.id %>" 
+      request_type="<%= value.request_type %>" 
+      requesting_user="<%= user.username %>" 
+      authorized="<%= value.is_authorized %>" 
+      timestamp="<%= value.timestamp %>" 
+      ieid="<%= value.ieid %>" 
+    />
+    <% end %>
+  </enqueued_requests>
+  <% end %>
+</account_requests>
