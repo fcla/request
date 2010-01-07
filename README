@@ -1,1 +1,9 @@
 Queues and persists incoming requests to the DAITSS 2 workspace
+
+To get this to work on your machine:
+
+get daitss-ip library
+set RUBYLIB env var such that daitss-ip/lib and ./lib are included
+create data directory for database
+run setup-database.rb
+set DAITSS_WORKSPACE environment var
