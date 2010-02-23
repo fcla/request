@@ -29,6 +29,13 @@ describe RequestHandler do
     just_added.status.should == :enqueued
     just_added.request_type.should == :disseminate
     just_added.agent_identifier.should == "operator"
+
+    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
+
+    pt_event.should_not be_nil
+    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.operations_agent.identifier.should == "operator"
+    pt_event.notes.should == "request_type: disseminate"
   end
 
   it "should enqueue a new withdraw request requested by an operator" do
@@ -46,6 +53,13 @@ describe RequestHandler do
     just_added.status.should == :enqueued
     just_added.request_type.should == :withdraw
     just_added.agent_identifier.should == "operator"
+
+    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
+
+    pt_event.should_not be_nil
+    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.operations_agent.identifier.should == "operator"
+    pt_event.notes.should == "request_type: withdraw"
   end
 
   it "should enqueue a new peek request requested by an operator" do
@@ -63,6 +77,13 @@ describe RequestHandler do
     just_added.status.should == :enqueued
     just_added.request_type.should == :peek
     just_added.agent_identifier.should == "operator"
+
+    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
+
+    pt_event.should_not be_nil
+    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.operations_agent.identifier.should == "operator"
+    pt_event.notes.should == "request_type: peek"
   end
 
   it "should raise error if attempting to enqueue unknown request type" do
@@ -71,7 +92,7 @@ describe RequestHandler do
     lambda { id = RequestHandler.enqueue_request "operator", :foo, ieid }.should raise_error(InvalidRequestType)
   end
 
-  it "should enqueue a new disseminate request requested by a privileged user" do
+  it "should enqueue a new peek request requested by a privileged user" do
     ieid = rand(1000)
     now = Time.now
 
@@ -86,6 +107,13 @@ describe RequestHandler do
     just_added.status.should == :enqueued
     just_added.request_type.should == :peek
     just_added.agent_identifier.should == "contact"
+
+    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
+
+    pt_event.should_not be_nil
+    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.operations_agent.identifier.should == "contact"
+    pt_event.notes.should == "request_type: peek"
   end
 
   it "should enqueue a new withdrawal request requested by a privileged user" do
@@ -103,6 +131,13 @@ describe RequestHandler do
     just_added.status.should == :enqueued
     just_added.request_type.should == :withdraw
     just_added.agent_identifier.should == "contact"
+
+    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
+
+    pt_event.should_not be_nil
+    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.operations_agent.identifier.should == "contact"
+    pt_event.notes.should == "request_type: withdraw"
   end
 
   it "should enqueue a new peek request requested by a privileged user" do
@@ -120,6 +155,13 @@ describe RequestHandler do
     just_added.status.should == :enqueued
     just_added.request_type.should == :peek
     just_added.agent_identifier.should == "contact"
+
+    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
+
+    pt_event.should_not be_nil
+    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.operations_agent.identifier.should == "contact"
+    pt_event.notes.should == "request_type: peek"
   end
 
   it "should not enqueue a new disseminate request requested by a non-privileged user" do
@@ -149,19 +191,24 @@ describe RequestHandler do
     id2.should == nil
   end
 
-  # TODO: query for request approval record in package tracker
   it "should allow an authorized operator to approve a withdrawal request, add add a package tracker record for the approval" do
     ieid = rand(1000)
 
     request_id = RequestHandler.enqueue_request "operator", :withdraw, ieid
 
+    now = Time.now
     history_id = RequestHandler.authorize_request(request_id, "operator_2")
 
     request_record = Request.get(request_id)
 
     request_record.is_authorized.should == true
 
-    # TODO: query goes here
+    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Approval")
+
+    pt_event.should_not be_nil
+    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.operations_agent.identifier.should == "operator_2"
+    pt_event.notes.should == "authorizing_agent: operator_2, request_id: #{request_id}"
   end
 
   it "should not allow an operator to approve own requests" do
@@ -215,10 +262,18 @@ describe RequestHandler do
     
     request_id = RequestHandler.enqueue_request "operator", :disseminate, ieid
 
+    now = Time.now
     outcome = RequestHandler.delete_request "operator", ieid, :disseminate
 
     outcome.should == true
     Request.get(request_id).should == nil
+
+    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Deletion")
+
+    pt_event.should_not be_nil
+    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.operations_agent.identifier.should == "operator"
+    pt_event.notes.should == "request_id: #{request_id}"
   end
 
   it "should allow an authorized user to delete a request by type and ieid" do
@@ -226,10 +281,18 @@ describe RequestHandler do
     
     request_id = RequestHandler.enqueue_request "contact", :disseminate, ieid
 
+    now = Time.now
     outcome = RequestHandler.delete_request "contact", ieid, :disseminate
 
     outcome.should == true
     Request.get(request_id).should == nil
+
+    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Deletion")
+
+    pt_event.should_not be_nil
+    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.operations_agent.identifier.should == "contact"
+    pt_event.notes.should == "request_id: #{request_id}"
   end
 
   it "should allow operators to query all requests in a given account" do

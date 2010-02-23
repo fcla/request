@@ -4,6 +4,7 @@ require 'db/operations_events'
 require 'db/accounts'
 require 'db/projects'
 require 'db/keys'
+require 'package_tracker'
 require 'pp'
 
 class InvalidRequestType < StandardError; end
@@ -16,7 +17,7 @@ class RequestHandler
   # If authorized, returns the id of the new request.
   # Raises exception if not authorized.
   # Returns nil if a request of the same time is already enqueued for specified ieid.
-  # TODO: add a package tracker record for request submission
+  # Adds OperationsEvent
 
   def self.enqueue_request agent_identifier, type, ieid
 
@@ -53,6 +54,8 @@ class RequestHandler
 
       r.save!
 
+      PackageTracker.insert_op_event agent.identifier, ieid, "Request Submission", "request_type: #{type}"
+
       return r.id
     else
       raise NotAuthorized
@@ -61,7 +64,7 @@ class RequestHandler
 
   # authorize a request, and save record of authorization outcome. 
   # raises exception if user is not authorized to authorize request
-  # TODO: add a package tracker record for authorization
+  # Adds OperationsEvent
   
   def self.authorize_request request_id, authorizing_agent_identifier
     request = Request.get(request_id)
@@ -72,6 +75,8 @@ class RequestHandler
 
     if authorizing_agent and authorizing_agent.type == Operator and request.agent_identifier != authorizing_agent.identifier
       request.is_authorized = true
+
+      PackageTracker.insert_op_event authorizing_agent.identifier, request.ieid, "Request Approval", "authorizing_agent: #{authorizing_agent.identifier}, request_id: #{request.id}"
     else
       raise NotAuthorized
     end
@@ -104,12 +109,14 @@ class RequestHandler
   # if one exists, deletes any pending request associated with ieid ieid of type type.
   # if user doesn't have authorization, raise error.
   # if no such request exists, returns nil.
+  # Adds OperationsEvent
   
   def self.delete_request requesting_agent_identifier, ieid, type
     request = query_request requesting_agent_identifier, ieid, type
 
     return nil unless request
 
+      PackageTracker.insert_op_event requesting_agent_identifier, ieid, "Request Deletion", "request_id: #{request.id}"
     return request.destroy!
   end
 
