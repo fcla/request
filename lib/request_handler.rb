@@ -1,18 +1,24 @@
-require 'user'
 require 'request'
-require 'history'
+require 'db/operations_agents'
+require 'db/operations_events'
+require 'db/accounts'
+require 'db/projects'
+require 'db/keys'
+require 'pp'
 
 class InvalidRequestType < StandardError; end
 class NotAuthorized < StandardError; end
 
+# TODO: test how this will behave if a service or program is passed in as the agent
 class RequestHandler
 
   # enqueues a new request. 
   # If authorized, returns the id of the new request.
   # Raises exception if not authorized.
   # Returns nil if a request of the same time is already enqueued for specified ieid.
+  # TODO: add a package tracker record for request submission
 
-  def self.enqueue_request user, type, ieid
+  def self.enqueue_request agent_identifier, type, ieid
 
     # raise error if specified type is not supported
     # TODO: move to validation in model?
@@ -22,7 +28,9 @@ class RequestHandler
     
     return nil if already_enqueued? ieid, type
 
-    if authorized_to_submit? user, type
+    agent = OperationsAgent.first(:identifier => agent_identifier)
+
+    if authorized_to_submit? agent, type
       r = Request.new
       now = Time.now
 
@@ -35,17 +43,15 @@ class RequestHandler
 
       r.attributes = {
         :ieid => ieid,
-        :account => user.account,
+        :account => agent.account.code,
         :timestamp => now,
         :is_authorized => auth,
         :status => :enqueued,
-        :request_type => type
+        :request_type => type,
+        :agent_identifier => agent_identifier
       }
 
-      user.requests << r
-
       r.save!
-      user.save!
 
       return r.id
     else
@@ -54,45 +60,38 @@ class RequestHandler
   end
 
   # authorize a request, and save record of authorization outcome. 
-  # returns primary key to outcome record
   # raises exception if user is not authorized to authorize request
+  # TODO: add a package tracker record for authorization
   
-  def self.authorize_request request_id, authorizing_user
+  def self.authorize_request request_id, authorizing_agent_identifier
     request = Request.get(request_id)
-    history = History.new
     now = Time.now
 
-    if authorizing_user.is_operator and request.user_id != authorizing_user.id
+    authorizing_agent = OperationsAgent.first(:identifier => authorizing_agent_identifier)
+    authorizing_agents = OperationsAgent.all
+
+    if authorizing_agent and authorizing_agent.type == Operator and request.agent_identifier != authorizing_agent.identifier
       request.is_authorized = true
     else
       raise NotAuthorized
     end
 
-    history.attributes = {
-      :timestamp => now
-    }
-
-    authorizing_user.histories << history
-    request.histories << history
-
-    authorizing_user.save!
     request.save!
-    history.save!
-
-    return history.id
   end
 
   # if one exists, returns any pending request associated with ieid ieid of type type.
   # if no such request exists, returns nil.
   # if user is not authorized, exception is raised
   
-  def self.query_request requesting_user, ieid, type
+  def self.query_request requesting_agent_identifier, ieid, type
     request = Request.first(:ieid => ieid, :request_type => type, :status => :enqueued)
 
     # if user is not an operator, check if account of requesting user matches account of the request
     
-    if request
-      if request.account == requesting_user.account or requesting_user.is_operator == true
+    agent = OperationsAgent.first(:identifier => requesting_agent_identifier)
+
+    if request and agent
+      if request.account == agent.account.code or agent.type == Operator
         return request
       else
         raise NotAuthorized
@@ -106,8 +105,8 @@ class RequestHandler
   # if user doesn't have authorization, raise error.
   # if no such request exists, returns nil.
   
-  def self.delete_request requesting_user, ieid, type
-    request = query_request requesting_user, ieid, type
+  def self.delete_request requesting_agent_identifier, ieid, type
+    request = query_request requesting_agent_identifier, ieid, type
 
     return nil unless request
 
@@ -118,17 +117,37 @@ class RequestHandler
   # raises exception if user does not have authorization
   # returns empty array if result set is empty
   
-  def self.query_account requesting_user, account
-    if requesting_user.is_operator == false and account != requesting_user.account
-        raise NotAuthorized
-    end
+  def self.query_account requesting_agent_identifier, account
+    agent = OperationsAgent.first(:identifier => requesting_agent_identifier)
 
-    return Request.all(:account => account)
+    if agent and (agent.type == Operator or account == agent.account.code)
+      return Request.all(:account => account)
+    else
+      raise NotAuthorized
+    end
   end
 
-  # TODO: authorization
-  def self.query_ieid requesting_user, ieid
-    return Request.all(:ieid => ieid)
+  # returns the set of all requests (pending and not) for a given ieid 
+  # raises exception if user does not have authorization
+  # returns empty array if result set is empty
+
+  def self.query_ieid requesting_agent_identifier, ieid
+    agent = OperationsAgent.first(:identifier => requesting_agent_identifier)
+
+    requests = Request.all(:ieid => ieid)
+
+    raise NotAuthorized unless agent
+
+    requests.each do |request|
+      if agent.type == Operator
+      elsif agent.type == Contact 
+        raise NotAuthorized unless request.account == agent.account.code
+      else
+        raise NotAuthorized
+      end
+    end
+
+    return requests
   end
 
   # sets status of request to :released_to_workspace, dequeing it
@@ -147,16 +166,19 @@ class RequestHandler
     type == :withdraw or type == :disseminate or type == :peek
   end
 
-  def self.authorized_to_submit? user, type
-    return true if user.is_operator
+  # returns true if agent is authorized to submit request, false otherwise
+  def self.authorized_to_submit? agent, type
+    if agent and agent.type == Operator
+      return true
+    elsif agent and agent.type == Contact
+      return true if type == :disseminate and agent.permissions.include?(:disseminate)
+      return true if type == :withdraw and agent.permissions.include?(:withdraw)
+      return true if type == :peek and agent.permissions.include?(:peek)
 
-    return true if type == :disseminate and user.can_disseminate
-
-    return true if type == :withdraw and user.can_withdraw
-
-    return true if type == :peek and user.can_peek
-
-    return false
+      return false
+    else
+      return false
+    end
   end
 
   def self.already_enqueued? ieid, type
