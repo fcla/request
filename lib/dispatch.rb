@@ -16,12 +16,12 @@ class Dispatch
     case type
 
     when :disseminate
-      wip.tags["drop_path"] = DISSEMINATE_DROP_PATH
-      wip.tags["dissemination_request"] = Time.now.to_s
+      wip.tags["drop-path"] = DISSEMINATE_DROP_PATH
+      wip.tags["dissemination-request"] = Time.now.to_s
     when :withdraw
-      wip.tags["withdrawal_request"] = Time.now.to_s
+      wip.tags["withdrawal-request"] = Time.now.to_s
     when :peek
-      wip.tags["peek_request"] = Time.now.to_s
+      wip.tags["peek-request"] = Time.now.to_s
     else
       raise "Unknown request type: #{type}"
     end
