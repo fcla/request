@@ -1,12 +1,17 @@
 require 'request_handler'
+require 'helper'
 
 describe RequestHandler do
 
   before(:each) do
     DataMapper.setup(:default, "sqlite3://#{Dir.pwd}/data/request.db")
+    DataMapper.auto_migrate!
 
-    # TODO: clean this up/factor
-    `#{Dir.pwd}/setup-database.rb`
+    a = add_account
+    add_operator a
+    add_operator a, "operator_2", "operator"
+    add_contact a
+    add_contact a, [:submit], "foobar", "foobar"
   end
 
   it "should enqueue a new disseminate request requested by an operator" do
@@ -119,28 +124,24 @@ describe RequestHandler do
 
   it "should not enqueue a new disseminate request requested by a non-privileged user" do
     ieid = rand(1000)
-    now = Time.now
 
     lambda { RequestHandler.enqueue_request "foobar", :disseminate, ieid }.should raise_error(NotAuthorized)
   end
 
   it "should not enqueue a new withdraw request requested by a non-privileged user" do
     ieid = rand(1000)
-    now = Time.now
 
     lambda { RequestHandler.enqueue_request "foobar", :withdraw, ieid }.should raise_error(NotAuthorized)
   end
 
   it "should not enqueue a new peek request requested by a non-privileged user" do
     ieid = rand(1000)
-    now = Time.now
 
     lambda { RequestHandler.enqueue_request "foobar", :peek, ieid }.should raise_error(NotAuthorized)
   end
 
   it "should not enqueue a request if a request of that type is already enqueued for a given ieid" do
     ieid = rand(1000)
-    now = Time.now
 
     id = RequestHandler.enqueue_request "operator", :disseminate, ieid
     id2 = RequestHandler.enqueue_request "operator", :disseminate, ieid
@@ -150,7 +151,6 @@ describe RequestHandler do
 
   # TODO: query for request approval record in package tracker
   it "should allow an authorized operator to approve a withdrawal request, add add a package tracker record for the approval" do
-    now = Time.now
     ieid = rand(1000)
 
     request_id = RequestHandler.enqueue_request "operator", :withdraw, ieid
@@ -165,7 +165,6 @@ describe RequestHandler do
   end
 
   it "should not allow an operator to approve own requests" do
-    now = Time.now
     ieid = rand(1000)
 
     request_id = RequestHandler.enqueue_request "operator", :withdraw, ieid
@@ -174,7 +173,6 @@ describe RequestHandler do
   end
 
   it "should not allow a regular user to to approve own requests" do
-    now = Time.now
     ieid = rand(1000)
 
     request_id = RequestHandler.enqueue_request "contact", :withdraw, ieid
@@ -183,7 +181,6 @@ describe RequestHandler do
   end
 
   it "should not allow a regular user to to approve another user's requests" do
-    now = Time.now
     ieid = rand(1000)
 
     request_id = RequestHandler.enqueue_request "contact", :withdraw, ieid
@@ -193,7 +190,6 @@ describe RequestHandler do
 
   it "should allow an operator to query for requests by ieid and type" do
     ieid = rand(1000)
-    now = Time.now
 
     request_id = RequestHandler.enqueue_request "operator", :disseminate, ieid
 
@@ -205,7 +201,6 @@ describe RequestHandler do
 
   it "should allow an authorized user to query for requests by ieid and type" do
     ieid = rand(1000)
-    now = Time.now
 
     request_id = RequestHandler.enqueue_request "contact", :disseminate, ieid
 
