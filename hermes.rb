@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 
 require 'sinatra'
-require 'user'
 require 'request_handler'
 require 'libxml'
 
@@ -20,18 +19,23 @@ helpers do
   def get_credentials
     return nil unless credentials? 
 
-    @auth ||=  Rack::Auth::Basic::Request.new(request.env)
     return @auth.credentials
   end
 
-  # returns a user object from a matching set of credentials found, nil otherwise
+  # returns an operations_agent object from a matching set of credentials found, nil otherwise
 
-  def get_user
+  def get_agent
     user_credentials = get_credentials
 
     return nil if user_credentials == nil
 
-    User.first(:username => user_credentials[0], :password => user_credentials[1])
+    agent = OperationsAgent.first(:identifier => user_credentials[0])
+
+    if agent && agent.authentication_key.auth_key == Digest::SHA1.hexdigest(user_credentials[1])
+      return agent
+    else
+      return nil
+    end
   end
 
   # returns appropriate symbol based on type portion of uri
@@ -74,12 +78,12 @@ end
 post '/requests/:ieid/:type' do
   halt 401 unless credentials? 
 
-  # get user credentials and use them to get a user object
-  u = get_user
+  # get agent credentials and use them to get a agent object
+  agent = get_agent
 
   # enqueue request
   begin
-    enqueued = RequestHandler.enqueue_request u, get_type(params[:type]), params[:ieid] 
+    enqueued = RequestHandler.enqueue_request agent.identifier, get_type(params[:type]), params[:ieid] 
   rescue NotAuthorized
     halt 403
   end
@@ -94,14 +98,13 @@ end
 get '/requests/:ieid/:type' do
   halt 401 unless credentials? 
 
-  u = get_user
+  agent = get_agent
 
-  # look up request and user objects
+  # look up request and agent objects
   begin
-    @request = RequestHandler.query_request u, params[:ieid], get_type(params[:type])
+    @request = RequestHandler.query_request agent.identifier, params[:ieid], get_type(params[:type])
 
     if @request
-      @user = @request.user
     else
       halt 404
     end
@@ -117,10 +120,10 @@ end
 delete '/requests/:ieid/:type' do
   halt 401 unless credentials?
 
-  u = get_user
+  agent = get_agent
 
   begin
-    RequestHandler.delete_request u, params[:ieid], get_type(params[:type])
+    RequestHandler.delete_request agent.identifier, params[:ieid], get_type(params[:type])
   rescue NotAuthorized
     halt 403
   end
@@ -131,14 +134,14 @@ end
 post '/requests/:ieid/:type/approve' do
   halt 401 unless credentials?
 
-  u = get_user
+  agent = get_agent
 
   begin
-    request = RequestHandler.query_request u, params[:ieid], get_type(params[:type])
+    request = RequestHandler.query_request agent.identifier, params[:ieid], get_type(params[:type])
 
     halt 404 if request == nil
 
-    RequestHandler.authorize_request request.id, u
+    RequestHandler.authorize_request request.id, agent.identifier
   rescue NotAuthorized
     halt 403
   end
@@ -151,10 +154,10 @@ get '/requests/:ieid' do
 
   @ieid = params[:ieid]
 
-  u = get_user
+  agent = get_agent
 
   begin
-    @requests_by_ieid = RequestHandler.query_ieid u, @ieid
+    @requests_by_ieid = RequestHandler.query_ieid agent.identifier, @ieid
   rescue NotAuthorized
     halt 403
   end
@@ -167,7 +170,7 @@ end
 post '/requests_by_xml' do
   halt 401 unless credentials?
 
-  u = get_user
+  agent = get_agent
 
   @created = []
   @already_exist = []
@@ -192,7 +195,7 @@ post '/requests_by_xml' do
     ieid = ieid_node.first
 
     begin
-      enqueued = RequestHandler.enqueue_request u, @type, ieid
+      enqueued = RequestHandler.enqueue_request agent.identifier, @type, ieid
     rescue NotAuthorized
       @not_authorized.push ieid
     else
@@ -216,11 +219,11 @@ get '/query_requests' do
 
   halt 400 unless params["account"]
 
-  u = get_user
+  agent = get_agent
 
   begin
     @account = params["account"]
-    @requests_by_account = group_by_ieid RequestHandler.query_account u, @account
+    @requests_by_account = group_by_ieid RequestHandler.query_account agent.identifier, @account
 
     erb :account_requests
   rescue NotAuthorized
