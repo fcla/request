@@ -20,8 +20,8 @@ describe Dispatch do
 
     path_to_wip = Dispatch.dispatch_request ieid, :disseminate
 
-    wip = Wip.new path_to_wip, URI_PREFIX
-    wip.tags["dissemination_request"].should == now
+    wip = Wip.new path_to_wip
+    wip.tags["dissemination-request"].should == now
   end
 
   it "should create a withdrawl sub-wip" do
@@ -30,8 +30,8 @@ describe Dispatch do
 
     path_to_wip = Dispatch.dispatch_request ieid, :withdraw
 
-    wip = Wip.new path_to_wip, URI_PREFIX
-    wip.tags["withdrawal_request"].should == now
+    wip = Wip.new path_to_wip
+    wip.tags["withdrawal-request"].should == now
   end
 
   it "should create a peek sub-wip" do
@@ -40,8 +40,8 @@ describe Dispatch do
 
     path_to_wip = Dispatch.dispatch_request ieid, :peek
 
-    wip = Wip.new path_to_wip, URI_PREFIX
-    wip.tags["peek_request"].should == now
+    wip = Wip.new path_to_wip
+    wip.tags["peek-request"].should == now
   end
 
   it "should correctly tell when a wip for an ieid exists in the workspace" do
