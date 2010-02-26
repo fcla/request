@@ -54,7 +54,7 @@ class RequestHandler
 
       r.save!
 
-      PackageTracker.insert_op_event agent.identifier, ieid, "Request Submission", "request_type: #{type}"
+      PackageTracker.insert_op_event agent.identifier, ieid, "Request Submission", "request_type: #{type}, request_id: #{r.id}"
 
       return r.id
     else
@@ -158,9 +158,12 @@ class RequestHandler
   end
 
   # sets status of request to :released_to_workspace, dequeing it
+  # TODO: add package tracker event
 
-  def self.dequeue_request request_id
+  def self.dequeue_request request_id, operations_agent_identifier
     r = Request.get(request_id)
+
+    PackageTracker.insert_op_event operations_agent_identifier, r.ieid, "Request Released to Workspace", "request_id: #{r.id}"
 
     r.status = :released_to_workspace
     r.save!

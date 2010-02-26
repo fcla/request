@@ -35,7 +35,7 @@ describe RequestHandler do
     pt_event.should_not be_nil
     pt_event.timestamp.to_s.should == now.iso8601
     pt_event.operations_agent.identifier.should == "operator"
-    pt_event.notes.should == "request_type: disseminate"
+    pt_event.notes.should == "request_type: disseminate, request_id: #{id}"
   end
 
   it "should enqueue a new withdraw request requested by an operator" do
@@ -59,7 +59,7 @@ describe RequestHandler do
     pt_event.should_not be_nil
     pt_event.timestamp.to_s.should == now.iso8601
     pt_event.operations_agent.identifier.should == "operator"
-    pt_event.notes.should == "request_type: withdraw"
+    pt_event.notes.should == "request_type: withdraw, request_id: #{id}"
   end
 
   it "should enqueue a new peek request requested by an operator" do
@@ -83,7 +83,7 @@ describe RequestHandler do
     pt_event.should_not be_nil
     pt_event.timestamp.to_s.should == now.iso8601
     pt_event.operations_agent.identifier.should == "operator"
-    pt_event.notes.should == "request_type: peek"
+    pt_event.notes.should == "request_type: peek, request_id: #{id}"
   end
 
   it "should raise error if attempting to enqueue unknown request type" do
@@ -113,7 +113,7 @@ describe RequestHandler do
     pt_event.should_not be_nil
     pt_event.timestamp.to_s.should == now.iso8601
     pt_event.operations_agent.identifier.should == "contact"
-    pt_event.notes.should == "request_type: peek"
+    pt_event.notes.should == "request_type: peek, request_id: #{id}"
   end
 
   it "should enqueue a new withdrawal request requested by a privileged user" do
@@ -137,7 +137,7 @@ describe RequestHandler do
     pt_event.should_not be_nil
     pt_event.timestamp.to_s.should == now.iso8601
     pt_event.operations_agent.identifier.should == "contact"
-    pt_event.notes.should == "request_type: withdraw"
+    pt_event.notes.should == "request_type: withdraw, request_id: #{id}"
   end
 
   it "should enqueue a new peek request requested by a privileged user" do
@@ -161,7 +161,7 @@ describe RequestHandler do
     pt_event.should_not be_nil
     pt_event.timestamp.to_s.should == now.iso8601
     pt_event.operations_agent.identifier.should == "contact"
-    pt_event.notes.should == "request_type: peek"
+    pt_event.notes.should == "request_type: peek, request_id: #{id}"
   end
 
   it "should not enqueue a new disseminate request requested by a non-privileged user" do
@@ -380,15 +380,26 @@ describe RequestHandler do
   end
 
   it "should dequeue requests" do
+    a = add_account
+    p = add_program a
+
     ieid = rand(1000)
 
     request_id = RequestHandler.enqueue_request "operator", :disseminate, ieid
 
-    RequestHandler.dequeue_request request_id
+    now = Time.now
+    RequestHandler.dequeue_request request_id, p.identifier
 
     r = Request.get(request_id)
 
     r.status.should == :released_to_workspace
+
+    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Released to Workspace")
+
+    pt_event.should_not be_nil
+    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.operations_agent.identifier.should == "bianchi:/Users/manny/code/git/request/poll-workspace"
+    pt_event.notes.should == "request_id: #{request_id}"
   end
 
   it "shouldn't allow a bogus user to do anything" do

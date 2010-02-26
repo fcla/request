@@ -53,3 +53,36 @@ def add_contact account, permissions = [:disseminate, :withdraw, :peek], identif
   c.save!
 end
 
+def add_service account, identifier="http://request.dev.fcla.edu", password = "request", description = "d2 request service"
+  s = Service.new
+  s.attributes = { :description => description,
+                   :active_start_date => Time.at(0),
+                   :active_end_date => Time.now + (86400 * 365),
+                   :identifier => identifier }
+
+  s.account = account
+
+  j = AuthenticationKey.new
+  j.attributes = { :auth_key => Digest::SHA1.hexdigest(password) }
+
+  s.authentication_key = j
+  s.save!
+end
+
+def add_program account, identifier="bianchi:/Users/manny/code/git/request/poll-workspace", password = "poller", description = "Request service poller"
+  p = Program.new
+  p.attributes = { :description => description,
+                   :active_start_date => Time.at(0),
+                   :active_end_date => Time.now + (86400 * 365),
+                   :identifier => identifier }
+
+  p.account = account
+
+  j = AuthenticationKey.new
+  j.attributes = { :auth_key => Digest::SHA1.hexdigest(password) }
+
+  p.authentication_key = j
+  p.save!
+
+  return p
+end
