@@ -34,87 +34,102 @@ describe "Request Service (Hermes)" do
     LibXML::XML.default_keep_blanks = false
   end
 
+  def generate_ieid
+    return rand(1000)
+  end
+
+  def authenticated_post uri, username, password, middle_param = {}
+    post uri, middle_param, {'HTTP_AUTHORIZATION' => encode_credentials(username, password)}
+  end
+
+  def authenticated_get uri, username, password, middle_param = {}
+    get uri, middle_param, {'HTTP_AUTHORIZATION' => encode_credentials(username, password)}
+  end
+
+  def authenticated_delete uri, username, password, middle_param = {}
+    delete uri, middle_param, {'HTTP_AUTHORIZATION' => encode_credentials(username, password)}
+  end
+
    it "should return 401 if http authorization missing on request submission" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/disseminate"
-
     post uri
+
     last_response.status.should == 401
   end
 
   it "should return 401 if http authorization missing on request query" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/disseminate"
-
     get uri
+
     last_response.status.should == 401
   end
 
   it "should return 401 if http authorization missing on request deletion" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/disseminate"
-
     delete uri
+
     last_response.status.should == 401
   end
 
   it "should return 401 if http authorization missing on request approval" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/withdraw/approve"
-
     post uri
+
     last_response.status.should == 401
   end
 
   it "should return 401 if http authorization missing on query on ieid" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}"
-
     get uri
+
     last_response.status.should == 401
   end
 
   it "should return 401 if http authorization missing on query by account name" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/query_requests?account=FDA"
-
     get uri
+
     last_response.status.should == 401
   end
 
   it "should return 401 if http authorization missing on multiple request submission" do
     uri = "/requests_by_xml"
-
     post uri
+
     last_response.status.should == 401
   end
 
   ###### DISSEMINATE
 
   it "should return 201 on authorized dissemination request submission from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/disseminate"
+    authenticated_post uri, "operator", "operator"
 
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
     last_response.status.should == 201
   end
 
   it "should expose a request resource on authorized disseimation request submission from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
     now = Time.now
 
     uri = "/requests/#{ieid}/disseminate"
+    authenticated_post uri, "operator", "operator"
+    authenticated_get uri, "operator", "operator"
 
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
     last_response.status.should == 200
 
     response_doc = LibXML::XML::Document.string last_response.body
@@ -127,56 +142,51 @@ describe "Request Service (Hermes)" do
   end
 
   it "should return 403 on unauthorized dissemination request submission from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/disseminate"
+    authenticated_post uri, "gator", "gator"
 
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("gator", "gator")}
     last_response.status.should == 403
   end
 
   it "should return 403 on unauthorized dissemination request query from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/disseminate"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("gator", "gator")}
+    authenticated_post uri, "operator", "operator"
+    authenticated_get uri, "gator", "gator"
 
     last_response.status.should == 403
   end
 
   it "should return 200 on authorized dissemination request deletion from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/disseminate"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator"
+    authenticated_delete uri, "operator", "operator"
 
     last_response.status.should == 200
   end
 
   it "should delete exposed resource after successful dissemination request deletion" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/disseminate"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator"
+    authenticated_delete uri, "operator", "operator"
+    authenticated_get uri, "operator", "operator"
 
     last_response.status.should == 404
   end
 
   it "should return 404 on unauthorized dissemination request deletion from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/disseminate"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("gator", "gator")}
+    authenticated_post uri, "operator", "operator"
+    authenticated_delete uri, "gator", "gator"
 
     last_response.status.should == 403
   end
@@ -184,23 +194,22 @@ describe "Request Service (Hermes)" do
   ###### WITHDRAW
 
   it "should return 201 on authorized withdrawal request submission from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/withdraw"
+    authenticated_post uri, "operator", "operator"
 
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
     last_response.status.should == 201
   end
 
   it "should expose a request resource on authorized withdrawal request submission from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
     now = Time.now
 
     uri = "/requests/#{ieid}/withdraw"
+    authenticated_post uri, "operator", "operator"
+    authenticated_get uri, "operator", "operator"
 
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
     last_response.status.should == 200
 
     response_doc = LibXML::XML::Document.string last_response.body
@@ -213,56 +222,51 @@ describe "Request Service (Hermes)" do
   end
 
   it "should return 403 on unauthorized withdrawal request submission from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/withdraw"
+    authenticated_post uri, "foobar", "foobar"
 
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("foobar", "foobar")}
     last_response.status.should == 403
   end
 
   it "should return 403 on unauthorized withdrawal request query from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/withdraw"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("gator", "gator")}
+    authenticated_post uri, "operator", "operator"
+    authenticated_get uri, "gator", "gator"
 
     last_response.status.should == 403
   end
 
   it "should return 200 on authorized withdrawal request deletion from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/withdraw"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator"
+    authenticated_delete uri, "operator", "operator"
 
     last_response.status.should == 200
   end
 
   it "should delete exposed resource after successful withdraw request deletion" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/withdraw"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator"
+    authenticated_delete uri, "operator", "operator"
+    authenticated_get uri, "operator", "operator"
 
     last_response.status.should == 404
   end
 
   it "should return 403 on unauthorized withdraw request deletion from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/withdraw"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("gator", "gator")}
+    authenticated_post uri, "operator", "operator"
+    authenticated_delete uri, "gator", "gator"
 
     last_response.status.should == 403
   end
@@ -270,23 +274,22 @@ describe "Request Service (Hermes)" do
   ###### PEEK
 
   it "should return 201 on authorized peek request submission from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/peek"
+    authenticated_post uri, "operator", "operator"
 
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
     last_response.status.should == 201
   end
 
   it "should expose a request resource on authorized peek request submission from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
     now = Time.now
 
     uri = "/requests/#{ieid}/peek"
+    authenticated_post uri, "operator", "operator"
+    authenticated_get uri, "operator", "operator"
 
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
     last_response.status.should == 200
 
     response_doc = LibXML::XML::Document.string last_response.body
@@ -299,81 +302,73 @@ describe "Request Service (Hermes)" do
   end
 
   it "should return 403 on unauthorized peek request submission from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/peek"
+    authenticated_post uri, "foobar", "foobar"
 
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("foobar", "foobar")}
     last_response.status.should == 403
   end
 
   it "should return 403 on unauthorized peek request query from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/peek"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("gator", "gator")}
+    authenticated_post uri, "operator", "operator"
+    authenticated_get uri, "gator", "gator"
 
     last_response.status.should == 403
   end
 
   it "should return 200 on authorized peek request deletion from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/peek"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator"
+    authenticated_delete uri, "operator", "operator"
 
     last_response.status.should == 200
   end
 
   it "should delete exposed resource after successful peek request deletion" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/peek"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator"
+    authenticated_delete uri, "operator", "operator"
+    authenticated_get uri, "operator", "operator"
 
     last_response.status.should == 404
   end
 
   it "should return 404 on unauthorized peek request deletion from valid user" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/peek"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    delete uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("gator", "gator")}
+    authenticated_post uri, "operator", "operator"
+    authenticated_delete uri, "gator", "gator"
 
     last_response.status.should == 403
   end
 
   it "should return 403 in response to any request that already exists" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/disseminate"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator"
+    authenticated_post uri, "operator", "operator"
 
     last_response.status.should == 403
 
     uri = "/requests/#{ieid}/withdraw"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator"
+    authenticated_post uri, "operator", "operator"
 
     last_response.status.should == 403
 
     uri = "/requests/#{ieid}/peek"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator"
+    authenticated_post uri, "operator", "operator"
 
     last_response.status.should == 403
   end
@@ -381,34 +376,29 @@ describe "Request Service (Hermes)" do
   ###### Approval Requests
   
   it "should return 200 in response to a valid withdraw authorization request" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/withdraw"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("contact", "foobar")}
+    authenticated_post uri, "contact", "foobar"
 
     uri = "/requests/#{ieid}/withdraw/approve"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator"
 
     last_response.status.should == 200
   end
 
   it "should set package request is_authorized state to true after a valid authorization request on it" do
-    ieid = rand(1000)
+    ieid = generate_ieid
     now = Time.now
 
     uri = "/requests/#{ieid}/withdraw"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("contact", "foobar")}
+    authenticated_post uri, "contact", "foobar"
 
     uri = "/requests/#{ieid}/withdraw/approve"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator"
 
     uri = "/requests/#{ieid}/withdraw"
-
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("contact", "foobar")}
+    authenticated_get uri, "contact", "foobar"
 
     response_doc = LibXML::XML::Document.string last_response.body
 
@@ -419,39 +409,34 @@ describe "Request Service (Hermes)" do
   end
 
   it "should return 403 in response to a withdraw authorization request made by a non-operator" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/withdraw"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator"
 
     uri = "/requests/#{ieid}/withdraw/approve"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("contact", "foobar")}
+    authenticated_post uri, "contact", "foobar"
 
     last_response.status.should == 403
   end
 
   it "should return 403 in response to a withdraw authorization request made by the same user that requested the withdrawal" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/withdraw"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator"
 
     uri = "/requests/#{ieid}/withdraw/approve"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator"
 
     last_response.status.should == 403
   end
 
   it "should return 404 in response to a withdrawal authorization request to an ieid with no pending withdrawal package request" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}/withdraw/approve"
-
-    post uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator"
 
     last_response.status.should == 404
   end
@@ -459,30 +444,28 @@ describe "Request Service (Hermes)" do
   ########## Query on IEID resource
 
   it "should return 200 OK in response to get on ieid resource" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri = "/requests/#{ieid}"
-
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_get uri, "operator", "operator"
 
     last_response.status.should == 200
   end
 
   it "should return an XML document with all requests for a given ieid in response to GET on ieid resource" do
-    ieid = rand(1000)
+    ieid = generate_ieid
     now = Time.now
 
     uri_disseminate = "/requests/#{ieid}/disseminate"
     uri_withdraw = "/requests/#{ieid}/withdraw"
     uri_peek = "/requests/#{ieid}/peek"
 
-    post uri_disseminate, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    post uri_withdraw, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    post uri_peek, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri_disseminate, "operator", "operator"
+    authenticated_post uri_withdraw, "operator", "operator"
+    authenticated_post uri_peek, "operator", "operator"
 
     uri_ieid_query = "/requests/#{ieid}"
-
-    get uri_ieid_query, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_get uri_ieid_query, "operator", "operator"
 
     response_doc = LibXML::XML::Document.string last_response.body
 
@@ -514,11 +497,10 @@ describe "Request Service (Hermes)" do
   end
 
   it "should return an XML document with all requests for a given ieid in response to get on ieid resource (even if there are no pending package requests)" do
-    ieid = rand(1000)
+    ieid = generate_ieid
 
     uri_ieid_query = "/requests/#{ieid}"
-
-    get uri_ieid_query, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_get uri_ieid_query, "operator", "operator"
 
     response_doc = LibXML::XML::Document.string last_response.body
 
@@ -530,8 +512,7 @@ describe "Request Service (Hermes)" do
   it "should return 200 OK in response to GET on requests_by_account resource" do
 
     uri = "/query_requests?account=FDA"
-
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_get uri, "operator", "operator"
 
     last_response.status.should == 200
   end
@@ -539,9 +520,9 @@ describe "Request Service (Hermes)" do
   it "should return an XML document with all the requests for a given account in response to get on query by account resource" do
     now = Time.now
 
-    ieid1 = rand(1000)
-    ieid2 = rand(1000)
-    ieid3 = rand(1000)
+    ieid1 = generate_ieid
+    ieid2 = generate_ieid
+    ieid3 = generate_ieid
 
     uri1 = "/requests/#{ieid1}/disseminate"
     uri2 = "/requests/#{ieid2}/disseminate"
@@ -549,18 +530,18 @@ describe "Request Service (Hermes)" do
     uri4 = "/requests/#{ieid1}/withdraw"
     uri5 = "/requests/#{ieid1}/peek"
 
-    post uri1, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    post uri2, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    post uri3, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    post uri4, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    post uri5, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri1, "operator", "operator"
+    authenticated_post uri2, "operator", "operator"
+    authenticated_post uri3, "operator", "operator"
+    authenticated_post uri4, "operator", "operator"
+    authenticated_post uri5, "operator", "operator"
 
     uri = "/query_requests?account=FDA"
-
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_get uri, "operator", "operator"
 
     # parse the XML document returned from the request service, testing the nodes for 
     # expected stucture, attributes, and values
+    # TODO: refactor
 
     response_doc = LibXML::XML::Document.string last_response.body
 
@@ -592,8 +573,7 @@ describe "Request Service (Hermes)" do
   it "should return 403 in response to GET on query by account resource made by unauthorized user" do
 
     uri = "/query_requests?account=FDA"
-
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("gator", "gator")}
+    authenticated_get uri, "gator", "gator"
 
     last_response.status.should == 403
   end
@@ -601,8 +581,7 @@ describe "Request Service (Hermes)" do
   it "should return 400 in response to GET on query by account if account is missing" do
 
     uri = "/query_requests"
-
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("contact", "foobar")}
+    authenticated_get uri, "contact", "foobar"
 
     last_response.status.should == 400
   end
@@ -611,9 +590,9 @@ describe "Request Service (Hermes)" do
   # post multiple requests with xml document
   
   it "should return 201 CREATED in response to post to requests_by_xml resource, and create a new resource for each ieid specified" do
-    ieid1 = rand(1000)
-    ieid2 = rand(1000)
-    ieid3 = rand(1000)
+    ieid1 = generate_ieid
+    ieid2 = generate_ieid
+    ieid3 = generate_ieid
 
     doc =<<-XML_UPLOAD
       <package_request_submission>
@@ -628,8 +607,7 @@ describe "Request Service (Hermes)" do
     XML_UPLOAD
 
     uri = "/requests_by_xml"
-
-    post uri, doc, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator", doc
 
     last_response.status.should == 200
 
@@ -637,20 +615,20 @@ describe "Request Service (Hermes)" do
     uri2 = "/requests/#{ieid2}/disseminate"
     uri3 = "/requests/#{ieid3}/disseminate"
 
-    get uri1, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_get uri1, "operator", "operator"
     last_response.status.should == 200
 
-    get uri2, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_get uri2, "operator", "operator"
     last_response.status.should == 200
 
-    get uri3, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_get uri3, "operator", "operator"
     last_response.status.should == 200
   end
 
   it "should return XML document correctly reporting resources created in response to POST to requests_by_xml resource" do
-    ieid1 = rand(1000)
-    ieid2 = rand(1000)
-    ieid3 = rand(1000)
+    ieid1 = generate_ieid
+    ieid2 = generate_ieid
+    ieid3 = generate_ieid
 
     doc =<<-XML_UPLOAD
       <package_request_submission>
@@ -665,8 +643,7 @@ describe "Request Service (Hermes)" do
     XML_UPLOAD
 
     uri = "/requests_by_xml"
-
-    post uri, doc, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator", doc
 
     doc = LibXML::XML::Document.string last_response.body
 
@@ -682,18 +659,18 @@ describe "Request Service (Hermes)" do
   end
 
   it "should return XML document correctly reporting resources not created in response to POST to requests_by_xml resource (resources not created because they already exist)" do
-    ieid1 = rand(1000)
-    ieid2 = rand(1000)
-    ieid3 = rand(1000)
+    ieid1 = generate_ieid
+    ieid2 = generate_ieid
+    ieid3 = generate_ieid
 
     uri1 = "/requests/#{ieid1}/disseminate"
     uri2 = "/requests/#{ieid2}/disseminate"
     uri3 = "/requests/#{ieid3}/disseminate"
 
-    post uri1, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    post uri2, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-    post uri3, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-
+    authenticated_post uri1, "operator", "operator"
+    authenticated_post uri2, "operator", "operator"
+    authenticated_post uri3, "operator", "operator"
+    
     doc =<<-XML_UPLOAD
       <package_request_submission>
         <requests type="disseminate">
@@ -707,8 +684,7 @@ describe "Request Service (Hermes)" do
     XML_UPLOAD
 
     uri = "/requests_by_xml"
-
-    post uri, doc, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
+    authenticated_post uri, "operator", "operator", doc
 
     doc = LibXML::XML::Document.string last_response.body
 
@@ -725,9 +701,9 @@ describe "Request Service (Hermes)" do
   end
 
   it "should return XML document correctly reporting resources not created in response to POST to requests_by_xml resource (not authorized)" do
-    ieid1 = rand(1000)
-    ieid2 = rand(1000)
-    ieid3 = rand(1000)
+    ieid1 = generate_ieid
+    ieid2 = generate_ieid
+    ieid3 = generate_ieid
 
     doc =<<-XML_UPLOAD
       <package_request_submission>
@@ -742,8 +718,7 @@ describe "Request Service (Hermes)" do
     XML_UPLOAD
 
     uri = "/requests_by_xml"
-
-    post uri, doc, {'HTTP_AUTHORIZATION' => encode_credentials("foobar", "foobar")}
+    authenticated_post uri, "foobar", "foobar", doc
 
     doc = LibXML::XML::Document.string last_response.body
 
@@ -762,8 +737,7 @@ describe "Request Service (Hermes)" do
   it "should return 200 OK in response to GET on query_requests resource" do
     uri = "/query_requests?account=FDA"
 
-    get uri, {}, {'HTTP_AUTHORIZATION' => encode_credentials("operator", "operator")}
-
+    authenticated_get uri, "operator", "operator"
     last_response.status.should == 200
   end
 
