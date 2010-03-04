@@ -681,7 +681,7 @@ describe "Request Service (Hermes)" do
     end
   end
 
-  it "should return XML document correctly reporting resources not created in response to POST to requests_by_xml resource (already exists)" do
+  it "should return XML document correctly reporting resources not created in response to POST to requests_by_xml resource (resources not created because they already exist)" do
     ieid1 = rand(1000)
     ieid2 = rand(1000)
     ieid3 = rand(1000)

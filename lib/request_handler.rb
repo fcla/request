@@ -191,7 +191,7 @@ class RequestHandler
     end
   end
 
-  def self.already_enqueued? ieid, type
-    Request.first(:ieid => ieid, :request_type => type, :status => :enqueued) != nil
+  def self.already_enqueued? ieid, request_type
+    Request.first(:ieid => ieid.to_s, :request_type => request_type, :status => :enqueued) != nil
   end
 end
