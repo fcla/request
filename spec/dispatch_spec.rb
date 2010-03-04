@@ -7,7 +7,7 @@ describe Dispatch do
 
   before(:each) do
     FileUtils.mkdir_p "/tmp/d2ws"
-    ENV["DAITSS_WORKSPACE"] = "/tmp/d2ws"
+    ENV["WORKSPACE"] = "/tmp/d2ws"
   end
 
   after(:each) do

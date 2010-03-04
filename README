@@ -6,4 +6,4 @@ get daitss-ip library
 set RUBYLIB env var such that daitss-ip/lib and ./lib are included
 create data directory for database
 run setup-database.rb
-set DAITSS_WORKSPACE environment var
+set WORKSPACE environment var

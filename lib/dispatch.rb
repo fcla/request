@@ -3,7 +3,7 @@ require 'uri'
 
 class Dispatch
 
-  WORKSPACE = ENV["DAITSS_WORKSPACE"]
+  WORKSPACE = ENV["WORKSPACE"]
   PREFIX_URI = "test:/"
   DISSEMINATE_DROP_PATH = "/tmp/disseminations/"
   
