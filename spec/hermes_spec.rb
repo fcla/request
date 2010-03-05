@@ -8,15 +8,12 @@ require 'libxml'
 
 require 'pp'
 
-include Rack::Test::Methods
+describe Hermes::App do
 
-set :environment, :test
-
-
-describe "Request Service (Hermes)" do
+  include Rack::Test::Methods
 
   def app
-    Sinatra::Application
+    Hermes::App
   end
 
   before(:each) do
