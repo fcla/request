@@ -12,6 +12,10 @@ DataMapper.setup(:default, "sqlite3://#{Dir.pwd}/data/request.db")
 
 DataMapper.auto_migrate!
 
+# This program is not needed for any spec tests or the operation of the service at all
+# Its purpose is simply to populate a table with test data for stand alone operation for demo purposes.
+
+
 # add an FDA account
 a = Account.new
 a.attributes = { :name => "FDA",
