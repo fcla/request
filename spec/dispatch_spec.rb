@@ -1,5 +1,6 @@
 require 'dispatch'
 require 'wip'
+require 'time'
 
 describe Dispatch do
 
@@ -16,32 +17,32 @@ describe Dispatch do
 
   it "should create a dissemination sub-wip" do
     ieid = rand(1000)
-    now = Time.now.to_s
+    now = Time.now
 
     path_to_wip = Dispatch.dispatch_request ieid, :disseminate
 
     wip = Wip.new path_to_wip
-    wip.tags["dissemination-request"].should == now
+    Time.parse(wip.tags["dissemination-request"]).should be_close(now, 1.0)
   end
 
   it "should create a withdrawl sub-wip" do
     ieid = rand(1000)
-    now = Time.now.to_s
+    now = Time.now
 
     path_to_wip = Dispatch.dispatch_request ieid, :withdraw
 
     wip = Wip.new path_to_wip
-    wip.tags["withdrawal-request"].should == now
+    Time.parse(wip.tags["withdrawal-request"]).should be_close(now, 1.0)
   end
 
   it "should create a peek sub-wip" do
     ieid = rand(1000)
-    now = Time.now.to_s
+    now = Time.now
 
     path_to_wip = Dispatch.dispatch_request ieid, :peek
 
     wip = Wip.new path_to_wip
-    wip.tags["peek-request"].should == now
+    Time.parse(wip.tags["peek-request"]).should be_close(now, 1.0)
   end
 
   it "should correctly tell when a wip for an ieid exists in the workspace" do

@@ -24,7 +24,7 @@ describe RequestHandler do
 
     just_added.should_not == nil
     just_added.ieid.should == ieid.to_s
-    just_added.timestamp.to_s.should == now.iso8601
+    just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
     just_added.request_type.should == :disseminate
@@ -33,7 +33,7 @@ describe RequestHandler do
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
 
     pt_event.should_not be_nil
-    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.timestamp.to_time.should be_close(now, 1.0)
     pt_event.operations_agent.identifier.should == "operator"
     pt_event.notes.should == "request_type: disseminate, request_id: #{id}"
   end
@@ -48,7 +48,7 @@ describe RequestHandler do
 
     just_added.should_not == nil
     just_added.ieid.should == ieid.to_s
-    just_added.timestamp.to_s.should == now.iso8601
+    just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == false
     just_added.status.should == :enqueued
     just_added.request_type.should == :withdraw
@@ -57,7 +57,7 @@ describe RequestHandler do
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
 
     pt_event.should_not be_nil
-    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.timestamp.to_time.should be_close(now, 1.0)
     pt_event.operations_agent.identifier.should == "operator"
     pt_event.notes.should == "request_type: withdraw, request_id: #{id}"
   end
@@ -72,7 +72,7 @@ describe RequestHandler do
 
     just_added.should_not == nil
     just_added.ieid.should == ieid.to_s
-    just_added.timestamp.to_s.should == now.iso8601
+    just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
     just_added.request_type.should == :peek
@@ -81,7 +81,7 @@ describe RequestHandler do
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
 
     pt_event.should_not be_nil
-    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.timestamp.to_time.should be_close(now, 1.0)
     pt_event.operations_agent.identifier.should == "operator"
     pt_event.notes.should == "request_type: peek, request_id: #{id}"
   end
@@ -102,7 +102,7 @@ describe RequestHandler do
 
     just_added.should_not == nil
     just_added.ieid.should == ieid.to_s
-    just_added.timestamp.to_s.should == now.iso8601
+    just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
     just_added.request_type.should == :peek
@@ -111,7 +111,7 @@ describe RequestHandler do
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
 
     pt_event.should_not be_nil
-    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.timestamp.to_time.should be_close(now, 1.0)
     pt_event.operations_agent.identifier.should == "contact"
     pt_event.notes.should == "request_type: peek, request_id: #{id}"
   end
@@ -126,7 +126,7 @@ describe RequestHandler do
 
     just_added.should_not == nil
     just_added.ieid.should == ieid.to_s
-    just_added.timestamp.to_s.should == now.iso8601
+    just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == false
     just_added.status.should == :enqueued
     just_added.request_type.should == :withdraw
@@ -135,7 +135,7 @@ describe RequestHandler do
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
 
     pt_event.should_not be_nil
-    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.timestamp.to_time.should be_close(now, 1.0)
     pt_event.operations_agent.identifier.should == "contact"
     pt_event.notes.should == "request_type: withdraw, request_id: #{id}"
   end
@@ -150,7 +150,7 @@ describe RequestHandler do
 
     just_added.should_not == nil
     just_added.ieid.should == ieid.to_s
-    just_added.timestamp.to_s.should == now.iso8601
+    just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
     just_added.request_type.should == :peek
@@ -159,7 +159,7 @@ describe RequestHandler do
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
 
     pt_event.should_not be_nil
-    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.timestamp.to_time.should be_close(now, 1.0)
     pt_event.operations_agent.identifier.should == "contact"
     pt_event.notes.should == "request_type: peek, request_id: #{id}"
   end
@@ -206,7 +206,7 @@ describe RequestHandler do
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Approval")
 
     pt_event.should_not be_nil
-    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.timestamp.to_time.should be_close(now, 1.0)
     pt_event.operations_agent.identifier.should == "operator_2"
     pt_event.notes.should == "authorizing_agent: operator_2, request_id: #{request_id}"
   end
@@ -271,7 +271,7 @@ describe RequestHandler do
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Deletion")
 
     pt_event.should_not be_nil
-    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.timestamp.to_time.should be_close(now, 1.0)
     pt_event.operations_agent.identifier.should == "operator"
     pt_event.notes.should == "request_id: #{request_id}"
   end
@@ -290,7 +290,7 @@ describe RequestHandler do
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Deletion")
 
     pt_event.should_not be_nil
-    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.timestamp.to_time.should be_close(now, 1.0)
     pt_event.operations_agent.identifier.should == "contact"
     pt_event.notes.should == "request_id: #{request_id}"
   end
@@ -397,7 +397,7 @@ describe RequestHandler do
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Released to Workspace")
 
     pt_event.should_not be_nil
-    pt_event.timestamp.to_s.should == now.iso8601
+    pt_event.timestamp.to_time.should be_close(now, 1.0)
     pt_event.operations_agent.identifier.should == "bianchi:/Users/manny/code/git/request/poll-workspace"
     pt_event.notes.should == "request_id: #{request_id}"
   end

@@ -6,8 +6,6 @@ require 'helper'
 require 'base64'
 require 'libxml'
 
-require 'pp'
-
 describe Hermes::App do
 
   include Rack::Test::Methods
@@ -135,7 +133,7 @@ describe Hermes::App do
     response_doc.root["ieid"].should == ieid.to_s
     response_doc.root["authorized"].should == "true"
     response_doc.root["requesting_user"].should == "operator"
-    response_doc.root["timestamp"].should == now.iso8601
+    Time.parse(response_doc.root["timestamp"]).should be_close(now, 1.0)
   end
 
   it "should return 403 on unauthorized dissemination request submission from valid user" do
@@ -215,7 +213,7 @@ describe Hermes::App do
     response_doc.root["ieid"].should == ieid.to_s
     response_doc.root["authorized"].should == "false"
     response_doc.root["requesting_user"].should == "operator"
-    response_doc.root["timestamp"].should == now.iso8601
+    Time.parse(response_doc.root["timestamp"]).should be_close(now, 1.0)
   end
 
   it "should return 403 on unauthorized withdrawal request submission from valid user" do
@@ -295,7 +293,7 @@ describe Hermes::App do
     response_doc.root["ieid"].should == ieid.to_s
     response_doc.root["authorized"].should == "true"
     response_doc.root["requesting_user"].should == "operator"
-    response_doc.root["timestamp"].should == now.iso8601
+    Time.parse(response_doc.root["timestamp"]).should be_close(now, 1.0)
   end
 
   it "should return 403 on unauthorized peek request submission from valid user" do
@@ -402,7 +400,7 @@ describe Hermes::App do
     response_doc.root["request_type"].should == "withdraw"
     response_doc.root["ieid"].should == ieid.to_s
     response_doc.root["authorized"].should == "true"
-    response_doc.root["timestamp"].should == now.iso8601
+    Time.parse(response_doc.root["timestamp"]).should be_close(now, 1.0)
   end
 
   it "should return 403 in response to a withdraw authorization request made by a non-operator" do
@@ -476,21 +474,21 @@ describe Hermes::App do
     children[0]["requesting_user"].should == "operator"
     children[0]["authorized"].should == "true"
     children[0]["ieid"].should == ieid.to_s
-    children[0]["timestamp"].should == now.iso8601
+    Time.parse(children[0]["timestamp"]).should be_close(now, 1.0)
 
     children[1]["request_id"].should == "2"
     children[1]["request_type"].should == "withdraw"
     children[1]["requesting_user"].should == "operator"
     children[1]["authorized"].should == "false"
     children[1]["ieid"].should == ieid.to_s
-    children[1]["timestamp"].should == now.iso8601
+    Time.parse(children[1]["timestamp"]).should be_close(now, 1.0)
 
     children[2]["request_id"].should == "3"
     children[2]["request_type"].should == "peek"
     children[2]["requesting_user"].should == "operator"
     children[2]["authorized"].should == "true"
     children[2]["ieid"].should == ieid.to_s
-    children[2]["timestamp"].should == now.iso8601
+    Time.parse(children[2]["timestamp"]).should be_close(now, 1.0)
   end
 
   it "should return an XML document with all requests for a given ieid in response to get on ieid resource (even if there are no pending package requests)" do
@@ -554,12 +552,12 @@ describe Hermes::App do
 
         ([ieid2, ieid3].include? req["ieid"].to_i).should == true
         req["request_type"].should == "disseminate"
-        req["timestamp"].should == now.iso8601
+        Time.parse(req["timestamp"]).should be_close(now, 1.0)
       elsif req_children.length == 3
         while req = req_children.shift
           ieid1.to_s.should == req["ieid"]
           (["disseminate", "withdraw", "peek"].include? req["request_type"]).should == true
-          req["timestamp"].should == now.iso8601
+          Time.parse(req["timestamp"]).should be_close(now, 1.0)
         end
       else
         raise StandardError, "Expecting nodes with 1 or 3 children"
