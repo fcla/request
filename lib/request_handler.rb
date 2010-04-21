@@ -1,4 +1,4 @@
-require 'request'
+require 'db/request'
 require 'db/operations_agents'
 require 'db/operations_events'
 require 'db/accounts'
