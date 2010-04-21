@@ -4,11 +4,11 @@ require 'sinatra'
 require 'request_handler'
 require 'libxml'
 
-require 'pp'
-
 module Hermes
 
   class App < Sinatra::Base
+    
+    set :root, File.dirname(__FILE__)
 
     helpers do
       # returns true if http basic auth credentials have been included with request
@@ -236,3 +236,4 @@ module Hermes
     end
   end
 end
+
