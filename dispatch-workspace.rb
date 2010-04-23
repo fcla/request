@@ -2,8 +2,12 @@
 
 require 'db/request'
 require 'dispatch'
+require 'daitss/config'
 
 WORKSPACE = ENV["WORKSPACE"]
+
+Daitss::CONFIG.load ENV['CONFIG']
+DataMapper.setup :default, Daitss::CONFIG['database-url']
 
 #for any request ieid for which there is no wip in the workspace, dispatch a "sub-wip" for that request
 

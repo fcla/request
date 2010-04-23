@@ -2,9 +2,13 @@
 
 require 'db/request'
 require 'dispatch'
+require 'daitss/config'
 
 WORKSPACE = ENV["WORKSPACE"]
 POLL_INTERVAL = 2
+
+Daitss::CONFIG.load ENV['CONFIG']
+DataMapper.setup :default, Daitss::CONFIG['database-url']
 
 while true
    #for any request ieid for which there is no wip in the workspace, dispatch a "sub-wip" for that request
