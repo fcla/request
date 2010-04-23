@@ -28,7 +28,8 @@ describe RequestHandler do
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
     just_added.request_type.should == :disseminate
-    just_added.agent_identifier.should == "operator"
+    just_added.operations_agent.identifier.should == "operator"
+    just_added.account.should == just_added.operations_agent.account
 
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
 
@@ -52,7 +53,8 @@ describe RequestHandler do
     just_added.is_authorized.should == false
     just_added.status.should == :enqueued
     just_added.request_type.should == :withdraw
-    just_added.agent_identifier.should == "operator"
+    just_added.operations_agent.identifier.should == "operator"
+    just_added.account.should == just_added.operations_agent.account
 
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
 
@@ -76,7 +78,8 @@ describe RequestHandler do
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
     just_added.request_type.should == :peek
-    just_added.agent_identifier.should == "operator"
+    just_added.operations_agent.identifier.should == "operator"
+    just_added.account.should == just_added.operations_agent.account
 
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
 
@@ -106,7 +109,8 @@ describe RequestHandler do
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
     just_added.request_type.should == :peek
-    just_added.agent_identifier.should == "contact"
+    just_added.operations_agent.identifier.should == "contact"
+    just_added.account.should == just_added.operations_agent.account
 
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
 
@@ -130,7 +134,8 @@ describe RequestHandler do
     just_added.is_authorized.should == false
     just_added.status.should == :enqueued
     just_added.request_type.should == :withdraw
-    just_added.agent_identifier.should == "contact"
+    just_added.operations_agent.identifier.should == "contact"
+    just_added.account.should == just_added.operations_agent.account
 
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
 
@@ -154,7 +159,8 @@ describe RequestHandler do
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
     just_added.request_type.should == :peek
-    just_added.agent_identifier.should == "contact"
+    just_added.operations_agent.identifier.should == "contact"
+    just_added.account.should == just_added.operations_agent.account
 
     pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
 

@@ -43,14 +43,15 @@ class RequestHandler
       end
 
       r.attributes = {
-        :ieid => ieid,
-        :account => agent.account.code,
         :timestamp => now,
+        :ieid => ieid,
         :is_authorized => auth,
         :status => :enqueued,
         :request_type => type,
-        :agent_identifier => agent_identifier
       }
+
+      r.operations_agent = agent
+      r.account = agent.account
 
       r.save!
 
@@ -71,9 +72,8 @@ class RequestHandler
     now = Time.now
 
     authorizing_agent = OperationsAgent.first(:identifier => authorizing_agent_identifier)
-    authorizing_agents = OperationsAgent.all
 
-    if authorizing_agent and authorizing_agent.type == Operator and request.agent_identifier != authorizing_agent.identifier
+    if authorizing_agent and authorizing_agent.type == Operator and request.operations_agent.identifier != authorizing_agent.identifier
       request.is_authorized = true
 
       PackageTracker.insert_op_event authorizing_agent.identifier, request.ieid, "Request Approval", "authorizing_agent: #{authorizing_agent.identifier}, request_id: #{request.id}"
@@ -96,7 +96,7 @@ class RequestHandler
     agent = OperationsAgent.first(:identifier => requesting_agent_identifier)
 
     if request and agent
-      if request.account == agent.account.code or agent.type == Operator
+      if request.account.code == agent.account.code or agent.type == Operator
         return request
       else
         raise NotAuthorized
@@ -128,7 +128,7 @@ class RequestHandler
     agent = OperationsAgent.first(:identifier => requesting_agent_identifier)
 
     if agent and (agent.type == Operator or account == agent.account.code)
-      return Request.all(:account => account)
+      return Request.all(:account => {:code => account})
     else
       raise NotAuthorized
     end

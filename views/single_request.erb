@@ -1,7 +1,7 @@
 <request 
   request_id="<%= @request.id %>" 
   request_type="<%= @request.request_type %>" 
-  requesting_user="<%= @request.agent_identifier %>" 
+  requesting_user="<%= @request.operations_agent.identifier %>" 
   authorized="<%= @request.is_authorized %>" 
   timestamp="<%= @request.timestamp %>" 
   ieid="<%= @request.ieid %>" 
