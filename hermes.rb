@@ -26,7 +26,7 @@ module Hermes
         return @auth.credentials
       end
 
-      # returns an operations_agent object from a matching set of credentials found, nil otherwise
+      # returns an operations_agent object from a matching set of credentials found, returns 403 otherwise
 
       def get_agent
         user_credentials = get_credentials
@@ -38,7 +38,7 @@ module Hermes
         if agent && agent.authentication_key.auth_key == Digest::SHA1.hexdigest(user_credentials[1])
           return agent
         else
-          return nil
+          halt 403
         end
       end
 
