@@ -409,5 +409,11 @@ describe RequestHandler do
   end
 
   it "shouldn't allow a bogus user to do anything" do
+    pending "write this test" 
   end
+
+  it "shouldn't allow a user belonging to another account to do anything" do
+    pending "write this test" 
+  end
+
 end

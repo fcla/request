@@ -186,6 +186,10 @@ describe Hermes::App do
     last_response.status.should == 403
   end
 
+  it "should return 404 on dissemination request from contact from different account" do
+    pending "code this"
+  end
+
   ###### WITHDRAW
 
   it "should return 201 on authorized withdrawal request submission from valid user" do
