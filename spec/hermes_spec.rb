@@ -26,6 +26,8 @@ describe Hermes::App do
     add_contact a, [:submit], "foobar", "foobar"
     add_contact b, [:submit], "gator", "gator"
 
+    @project = add_project a
+
     LibXML::XML.default_keep_blanks = false
   end
 
@@ -56,6 +58,7 @@ describe Hermes::App do
 
   it "should return 401 if http authorization missing on request query" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/disseminate"
     get uri
@@ -65,6 +68,7 @@ describe Hermes::App do
 
   it "should return 401 if http authorization missing on request deletion" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/disseminate"
     delete uri
@@ -74,6 +78,7 @@ describe Hermes::App do
 
   it "should return 401 if http authorization missing on request approval" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/withdraw/approve"
     post uri
@@ -83,6 +88,7 @@ describe Hermes::App do
 
   it "should return 401 if http authorization missing on query on ieid" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}"
     get uri
@@ -92,6 +98,7 @@ describe Hermes::App do
 
   it "should return 401 if http authorization missing on query by account name" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/query_requests?account=FDA"
     get uri
@@ -110,6 +117,7 @@ describe Hermes::App do
 
   it "should return 201 on authorized dissemination request submission from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/disseminate"
     authenticated_post uri, "operator", "operator"
@@ -119,6 +127,8 @@ describe Hermes::App do
 
   it "should expose a request resource on authorized disseimation request submission from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
+
     now = Time.now
 
     uri = "/requests/#{ieid}/disseminate"
@@ -138,6 +148,7 @@ describe Hermes::App do
 
   it "should return 403 on unauthorized dissemination request submission from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/disseminate"
     authenticated_post uri, "gator", "gator"
@@ -147,6 +158,7 @@ describe Hermes::App do
 
   it "should return 403 on unauthorized dissemination request query from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/disseminate"
     authenticated_post uri, "operator", "operator"
@@ -157,6 +169,7 @@ describe Hermes::App do
 
   it "should return 200 on authorized dissemination request deletion from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/disseminate"
     authenticated_post uri, "operator", "operator"
@@ -178,6 +191,7 @@ describe Hermes::App do
 
   it "should return 404 on unauthorized dissemination request deletion from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/disseminate"
     authenticated_post uri, "operator", "operator"
@@ -190,10 +204,15 @@ describe Hermes::App do
     pending "code this"
   end
 
+  it "should return 200 on dissemination request from operator from different account" do
+    pending "code"
+  end
+
   ###### WITHDRAW
 
   it "should return 201 on authorized withdrawal request submission from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/withdraw"
     authenticated_post uri, "operator", "operator"
@@ -203,6 +222,8 @@ describe Hermes::App do
 
   it "should expose a request resource on authorized withdrawal request submission from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
+
     now = Time.now
 
     uri = "/requests/#{ieid}/withdraw"
@@ -222,6 +243,7 @@ describe Hermes::App do
 
   it "should return 403 on unauthorized withdrawal request submission from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/withdraw"
     authenticated_post uri, "foobar", "foobar"
@@ -231,6 +253,7 @@ describe Hermes::App do
 
   it "should return 403 on unauthorized withdrawal request query from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/withdraw"
     authenticated_post uri, "operator", "operator"
@@ -241,6 +264,7 @@ describe Hermes::App do
 
   it "should return 200 on authorized withdrawal request deletion from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/withdraw"
     authenticated_post uri, "operator", "operator"
@@ -251,6 +275,7 @@ describe Hermes::App do
 
   it "should delete exposed resource after successful withdraw request deletion" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/withdraw"
     authenticated_post uri, "operator", "operator"
@@ -262,6 +287,7 @@ describe Hermes::App do
 
   it "should return 403 on unauthorized withdraw request deletion from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/withdraw"
     authenticated_post uri, "operator", "operator"
@@ -270,10 +296,19 @@ describe Hermes::App do
     last_response.status.should == 403
   end
 
+  it "should return 404 on withdraw request from contact from different account" do
+    pending "code this"
+  end
+
+  it "should return 200 on withdraw request from operator from different account" do
+    pending "code"
+  end
+
   ###### PEEK
 
   it "should return 201 on authorized peek request submission from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/peek"
     authenticated_post uri, "operator", "operator"
@@ -283,6 +318,7 @@ describe Hermes::App do
 
   it "should expose a request resource on authorized peek request submission from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
     now = Time.now
 
     uri = "/requests/#{ieid}/peek"
@@ -302,6 +338,7 @@ describe Hermes::App do
 
   it "should return 403 on unauthorized peek request submission from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/peek"
     authenticated_post uri, "foobar", "foobar"
@@ -311,6 +348,7 @@ describe Hermes::App do
 
   it "should return 403 on unauthorized peek request query from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/peek"
     authenticated_post uri, "operator", "operator"
@@ -321,6 +359,7 @@ describe Hermes::App do
 
   it "should return 200 on authorized peek request deletion from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/peek"
     authenticated_post uri, "operator", "operator"
@@ -331,6 +370,7 @@ describe Hermes::App do
 
   it "should delete exposed resource after successful peek request deletion" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/peek"
     authenticated_post uri, "operator", "operator"
@@ -342,6 +382,7 @@ describe Hermes::App do
 
   it "should return 404 on unauthorized peek request deletion from valid user" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/peek"
     authenticated_post uri, "operator", "operator"
@@ -352,6 +393,7 @@ describe Hermes::App do
 
   it "should return 403 in response to any request that already exists" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/disseminate"
     authenticated_post uri, "operator", "operator"
@@ -372,10 +414,20 @@ describe Hermes::App do
     last_response.status.should == 403
   end
 
+  it "should return 404 on peek request from contact from different account" do
+    pending "code this"
+  end
+
+  it "should return 200 on peek request from operator from different account" do
+    pending "code"
+  end
+
+
   ###### Approval Requests
   
   it "should return 200 in response to a valid withdraw authorization request" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/withdraw"
     authenticated_post uri, "contact", "foobar"
@@ -386,8 +438,13 @@ describe Hermes::App do
     last_response.status.should == 200
   end
 
+  it "should return 200 in response to a valid withdraw authorization request from an operator with a different account" do
+    pending "code"
+  end
+
   it "should set package request is_authorized state to true after a valid authorization request on it" do
     ieid = generate_ieid
+    add_intentity ieid, @project
     now = Time.now
 
     uri = "/requests/#{ieid}/withdraw"
@@ -409,6 +466,7 @@ describe Hermes::App do
 
   it "should return 403 in response to a withdraw authorization request made by a non-operator" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/withdraw"
     authenticated_post uri, "operator", "operator"
@@ -421,6 +479,7 @@ describe Hermes::App do
 
   it "should return 403 in response to a withdraw authorization request made by the same user that requested the withdrawal" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/withdraw"
     authenticated_post uri, "operator", "operator"
@@ -433,6 +492,7 @@ describe Hermes::App do
 
   it "should return 404 in response to a withdrawal authorization request to an ieid with no pending withdrawal package request" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}/withdraw/approve"
     authenticated_post uri, "operator", "operator"
@@ -444,6 +504,7 @@ describe Hermes::App do
 
   it "should return 200 OK in response to get on ieid resource" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri = "/requests/#{ieid}"
     authenticated_get uri, "operator", "operator"
@@ -453,6 +514,7 @@ describe Hermes::App do
 
   it "should return an XML document with all requests for a given ieid in response to GET on ieid resource" do
     ieid = generate_ieid
+    add_intentity ieid, @project
     now = Time.now
 
     uri_disseminate = "/requests/#{ieid}/disseminate"
@@ -497,6 +559,7 @@ describe Hermes::App do
 
   it "should return an XML document with all requests for a given ieid in response to get on ieid resource (even if there are no pending package requests)" do
     ieid = generate_ieid
+    add_intentity ieid, @project
 
     uri_ieid_query = "/requests/#{ieid}"
     authenticated_get uri_ieid_query, "operator", "operator"
@@ -504,6 +567,9 @@ describe Hermes::App do
     response_doc = LibXML::XML::Document.string last_response.body
 
     response_doc.root["ieid"].should == ieid.to_s
+  end
+
+  it "should return 404 on request on ieid resource from contact on different account" do
   end
 
   ###### Query by account
@@ -522,6 +588,10 @@ describe Hermes::App do
     ieid1 = generate_ieid
     ieid2 = generate_ieid
     ieid3 = generate_ieid
+
+    add_intentity ieid1, @project
+    add_intentity ieid2, @project
+    add_intentity ieid3, @project
 
     uri1 = "/requests/#{ieid1}/disseminate"
     uri2 = "/requests/#{ieid2}/disseminate"
@@ -585,6 +655,9 @@ describe Hermes::App do
     last_response.status.should == 400
   end
 
+  it "should return 404 on request on account resource from contact on different account" do
+    pending "code"
+  end
 
   # post multiple requests with xml document
   
@@ -592,6 +665,10 @@ describe Hermes::App do
     ieid1 = generate_ieid
     ieid2 = generate_ieid
     ieid3 = generate_ieid
+
+    add_intentity ieid1, @project
+    add_intentity ieid2, @project
+    add_intentity ieid3, @project
 
     doc =<<-XML_UPLOAD
       <package_request_submission>
@@ -629,6 +706,10 @@ describe Hermes::App do
     ieid2 = generate_ieid
     ieid3 = generate_ieid
 
+    add_intentity ieid1, @project
+    add_intentity ieid2, @project
+    add_intentity ieid3, @project
+
     doc =<<-XML_UPLOAD
       <package_request_submission>
         <requests type="disseminate">
@@ -661,6 +742,10 @@ describe Hermes::App do
     ieid1 = generate_ieid
     ieid2 = generate_ieid
     ieid3 = generate_ieid
+
+    add_intentity ieid1, @project
+    add_intentity ieid2, @project
+    add_intentity ieid3, @project
 
     uri1 = "/requests/#{ieid1}/disseminate"
     uri2 = "/requests/#{ieid2}/disseminate"
@@ -704,6 +789,10 @@ describe Hermes::App do
     ieid2 = generate_ieid
     ieid3 = generate_ieid
 
+    add_intentity ieid1, @project
+    add_intentity ieid2, @project
+    add_intentity ieid3, @project
+
     doc =<<-XML_UPLOAD
       <package_request_submission>
         <requests type="disseminate">
@@ -733,12 +822,30 @@ describe Hermes::App do
     end
   end
 
-  it "should return 200 OK in response to GET on query_requests resource" do
-    uri = "/query_requests?account=FDA"
-
-    authenticated_get uri, "operator", "operator"
-    last_response.status.should == 200
+  it "should return XML document correctly reporting resources not created in response to POST to requests_by_xml resource (wrong account)" do
+    pending "code"
   end
+
+  it "should return 404 on request to enqueue an event for a ieid that does not exist" do
+    pending "code"
+  end
+
+  it "should return 404 on request to dequeue an event for a ieid that does not exist" do
+    pending "code"
+  end
+
+  it "should return 404 on request to authorize an event for a ieid that does not exist" do
+    pending "code"
+  end
+
+  it "should return 404 on request to delete an event for a ieid that does not exist" do
+    pending "code"
+  end
+
+  it "should return 404 on request to query an event for a ieid that does not exist" do
+    pending "code"
+  end
+
 
   # query by parameters
 

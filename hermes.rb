@@ -56,11 +56,11 @@ module Hermes
 
         while req = array_of_requests_by_account.shift
 
-          if to_return[req.ieid]
-            to_return[req.ieid].push req
+          if to_return[req.intentity.id]
+            to_return[req.intentity.id].push req
           else
-            to_return[req.ieid] = []
-            to_return[req.ieid].push req
+            to_return[req.intentity.id] = []
+            to_return[req.intentity.id].push req
           end
         end
 

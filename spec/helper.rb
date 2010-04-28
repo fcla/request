@@ -101,3 +101,30 @@ def add_program account, identifier="bianchi:/Users/manny/code/git/request/poll-
 
   return p
 end
+
+def add_project account, name = "PRJ", code = "PRJ"
+  p = Project.new
+  p.attributes = { :name => name,
+                   :code => code }
+
+  p.account = account
+  p.save!
+
+  return p
+end
+
+def add_intentity ieid, project
+  i = Intentity.new
+
+  i.attributes = { :id => ieid,
+                   :original_name => "test package",
+                   :entity_id => "test",
+                   :volume => "vol",
+                   :issue => "issue",
+                   :title => "title" }
+
+  i.project = project
+  i.save!
+
+  return i
+end

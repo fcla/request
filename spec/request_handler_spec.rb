@@ -8,14 +8,23 @@ describe RequestHandler do
     DataMapper.auto_migrate!
 
     a = add_account
+    b = add_account "UF", "UF"
+
+    @project = add_project a
+
     add_operator a
     add_operator a, "operator_2", "operator"
+    add_operator b, "op_diff_act", "op_diff_act"
+
     add_contact a
     add_contact a, [:submit], "foobar", "foobar"
+    add_contact b, [:submit, :disseminate, :withdraw, :peek], "contact_diff_act", "contact_diff_act"
   end
 
   it "should enqueue a new disseminate request requested by an operator" do
     ieid = rand(1000)
+    add_intentity ieid, @project
+
     now = Time.now
 
     id = RequestHandler.enqueue_request "operator", :disseminate, ieid
@@ -23,7 +32,7 @@ describe RequestHandler do
     just_added = Request.get(id)
 
     just_added.should_not == nil
-    just_added.ieid.should == ieid.to_s
+    just_added.intentity.id.should == ieid.to_s
     just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
@@ -41,6 +50,8 @@ describe RequestHandler do
 
   it "should enqueue a new withdraw request requested by an operator" do
     ieid = rand(1000)
+    add_intentity ieid, @project
+
     now = Time.now
 
     id = RequestHandler.enqueue_request "operator", :withdraw, ieid
@@ -48,7 +59,7 @@ describe RequestHandler do
     just_added = Request.get(id)
 
     just_added.should_not == nil
-    just_added.ieid.should == ieid.to_s
+    just_added.intentity.id.should == ieid.to_s
     just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == false
     just_added.status.should == :enqueued
@@ -66,6 +77,8 @@ describe RequestHandler do
 
   it "should enqueue a new peek request requested by an operator" do
     ieid = rand(1000)
+    add_intentity ieid, @project
+
     now = Time.now
 
     id = RequestHandler.enqueue_request "operator", :peek, ieid
@@ -73,7 +86,7 @@ describe RequestHandler do
     just_added = Request.get(id)
 
     just_added.should_not == nil
-    just_added.ieid.should == ieid.to_s
+    just_added.intentity.id.should == ieid.to_s
     just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
@@ -91,12 +104,15 @@ describe RequestHandler do
 
   it "should raise error if attempting to enqueue unknown request type" do
     ieid = rand(1000)
+    add_intentity ieid, @project
 
     lambda { id = RequestHandler.enqueue_request "operator", :foo, ieid }.should raise_error(InvalidRequestType)
   end
 
   it "should enqueue a new peek request requested by a privileged user" do
     ieid = rand(1000)
+    add_intentity ieid, @project
+
     now = Time.now
 
     id = RequestHandler.enqueue_request "contact", :peek, ieid
@@ -104,7 +120,7 @@ describe RequestHandler do
     just_added = Request.get(id)
 
     just_added.should_not == nil
-    just_added.ieid.should == ieid.to_s
+    just_added.intentity.id.should == ieid.to_s
     just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
@@ -122,6 +138,8 @@ describe RequestHandler do
 
   it "should enqueue a new withdrawal request requested by a privileged user" do
     ieid = rand(1000)
+    add_intentity ieid, @project
+
     now = Time.now
 
     id = RequestHandler.enqueue_request "contact", :withdraw, ieid
@@ -129,7 +147,7 @@ describe RequestHandler do
     just_added = Request.get(id)
 
     just_added.should_not == nil
-    just_added.ieid.should == ieid.to_s
+    just_added.intentity.id.should == ieid.to_s
     just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == false
     just_added.status.should == :enqueued
@@ -147,6 +165,8 @@ describe RequestHandler do
 
   it "should enqueue a new peek request requested by a privileged user" do
     ieid = rand(1000)
+    add_intentity ieid, @project
+
     now = Time.now
 
     id = RequestHandler.enqueue_request "contact", :peek, ieid
@@ -154,7 +174,7 @@ describe RequestHandler do
     just_added = Request.get(id)
 
     just_added.should_not == nil
-    just_added.ieid.should == ieid.to_s
+    just_added.intentity.id.should == ieid.to_s
     just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
@@ -172,24 +192,28 @@ describe RequestHandler do
 
   it "should not enqueue a new disseminate request requested by a non-privileged user" do
     ieid = rand(1000)
+    add_intentity ieid, @project
 
     lambda { RequestHandler.enqueue_request "foobar", :disseminate, ieid }.should raise_error(NotAuthorized)
   end
 
   it "should not enqueue a new withdraw request requested by a non-privileged user" do
     ieid = rand(1000)
+    add_intentity ieid, @project
 
     lambda { RequestHandler.enqueue_request "foobar", :withdraw, ieid }.should raise_error(NotAuthorized)
   end
 
   it "should not enqueue a new peek request requested by a non-privileged user" do
     ieid = rand(1000)
+    add_intentity ieid, @project
 
     lambda { RequestHandler.enqueue_request "foobar", :peek, ieid }.should raise_error(NotAuthorized)
   end
 
   it "should not enqueue a request if a request of that type is already enqueued for a given ieid" do
     ieid = rand(1000)
+    add_intentity ieid, @project
 
     id = RequestHandler.enqueue_request "operator", :disseminate, ieid
     id2 = RequestHandler.enqueue_request "operator", :disseminate, ieid
@@ -199,6 +223,7 @@ describe RequestHandler do
 
   it "should allow an authorized operator to approve a withdrawal request, add add a package tracker record for the approval" do
     ieid = rand(1000)
+    add_intentity ieid, @project
 
     request_id = RequestHandler.enqueue_request "operator", :withdraw, ieid
 
@@ -219,6 +244,7 @@ describe RequestHandler do
 
   it "should not allow an operator to approve own requests" do
     ieid = rand(1000)
+    add_intentity ieid, @project
 
     request_id = RequestHandler.enqueue_request "operator", :withdraw, ieid
 
@@ -227,6 +253,7 @@ describe RequestHandler do
 
   it "should not allow a regular user to to approve own requests" do
     ieid = rand(1000)
+    add_intentity ieid, @project
 
     request_id = RequestHandler.enqueue_request "contact", :withdraw, ieid
 
@@ -235,6 +262,7 @@ describe RequestHandler do
 
   it "should not allow a regular user to to approve another user's requests" do
     ieid = rand(1000)
+    add_intentity ieid, @project
 
     request_id = RequestHandler.enqueue_request "contact", :withdraw, ieid
 
@@ -243,6 +271,7 @@ describe RequestHandler do
 
   it "should allow an operator to query for requests by ieid and type" do
     ieid = rand(1000)
+    add_intentity ieid, @project
 
     request_id = RequestHandler.enqueue_request "operator", :disseminate, ieid
 
@@ -254,6 +283,7 @@ describe RequestHandler do
 
   it "should allow an authorized user to query for requests by ieid and type" do
     ieid = rand(1000)
+    add_intentity ieid, @project
 
     request_id = RequestHandler.enqueue_request "contact", :disseminate, ieid
 
@@ -265,6 +295,7 @@ describe RequestHandler do
 
   it "should allow an operator to delete a request by type and ieid" do
     ieid = rand(1000)
+    add_intentity ieid, @project
     
     request_id = RequestHandler.enqueue_request "operator", :disseminate, ieid
 
@@ -284,6 +315,7 @@ describe RequestHandler do
 
   it "should allow an authorized user to delete a request by type and ieid" do
     ieid = rand(1000)
+    add_intentity ieid, @project
     
     request_id = RequestHandler.enqueue_request "contact", :disseminate, ieid
 
@@ -306,6 +338,11 @@ describe RequestHandler do
     ieid2 = rand(1000)
     ieid3 = rand(1000)
     ieid4 = rand(1000)
+
+    add_intentity ieid1, @project
+    add_intentity ieid2, @project
+    add_intentity ieid3, @project
+    add_intentity ieid4, @project
 
     request_id1 = RequestHandler.enqueue_request "operator", :disseminate, ieid1
     request_id2 = RequestHandler.enqueue_request "operator", :disseminate, ieid2
@@ -336,6 +373,11 @@ describe RequestHandler do
     ieid3 = rand(1000)
     ieid4 = rand(1000)
 
+    add_intentity ieid1, @project
+    add_intentity ieid2, @project
+    add_intentity ieid3, @project
+    add_intentity ieid4, @project
+
     request_id1 = RequestHandler.enqueue_request "contact", :disseminate, ieid1
     request_id2 = RequestHandler.enqueue_request "contact", :disseminate, ieid2
     request_id3 = RequestHandler.enqueue_request "contact", :disseminate, ieid3
@@ -355,6 +397,7 @@ describe RequestHandler do
 
   it "should allow operators to query all requests in a given ieid" do
     ieid = rand(1000)
+    add_intentity ieid, @project
 
     request_id1 = RequestHandler.enqueue_request "operator", :disseminate, ieid
     request_id2 = RequestHandler.enqueue_request "operator", :withdraw, ieid
@@ -390,6 +433,7 @@ describe RequestHandler do
     p = add_program a
 
     ieid = rand(1000)
+    add_intentity ieid, @project
 
     request_id = RequestHandler.enqueue_request "operator", :disseminate, ieid
 
@@ -408,12 +452,45 @@ describe RequestHandler do
     pt_event.notes.should == "request_id: #{request_id}"
   end
 
-  it "shouldn't allow a bogus user to do anything" do
-    pending "write this test" 
+  it "shouldn't allow a non-existant user to queue a request" do
+    ieid = rand(1000)
+    add_intentity ieid, @project
+
+    lambda { RequestHandler.enqueue_request "barbaz", :disseminate, ieid }.should raise_error(NotAuthorized)
   end
 
-  it "shouldn't allow a user belonging to another account to do anything" do
-    pending "write this test" 
+  it "shouldn't allow a user belonging to a different account from the package to queue a request" do
+    ieid = rand(1000)
+    add_intentity ieid, @project
+
+    lambda { RequestHandler.enqueue_request "contact_diff_act", :disseminate, ieid }.should raise_error(NotAuthorized)
+  end
+  
+  it "should allow an operator belonging to a different account from the package to queue a request" do
+    ieid = rand(1000)
+    add_intentity ieid, @project
+
+    lambda { RequestHandler.enqueue_request "op_diff_act", :disseminate, ieid }.should_not raise_error(NotAuthorized)
+  end
+
+  it "should raise error if enqueing a request for an ieid that does not exist in intentity table" do
+    pending "code me"
+  end
+
+  it "should raise error if dequeing a request for an ieid that does not exist in intentity table" do
+    pending "code me"
+  end
+
+  it "should raise error if deleting a request for an ieid that does not exist in intentity table" do
+    pending "code me"
+  end
+
+  it "should raise error if querying a request for an ieid that does not exist in intentity table" do
+    pending "code me"
+  end
+
+  it "should raise error if authorizing a request for an ieid that does not exist in intentity table" do
+    pending "code me"
   end
 
 end

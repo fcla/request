@@ -5,10 +5,10 @@ require 'db/accounts'
 require 'db/projects'
 require 'db/keys'
 require 'package_tracker'
-require 'pp'
 
 class InvalidRequestType < StandardError; end
 class NotAuthorized < StandardError; end
+class NoSuchIntEntity < StandardError; end
 
 # TODO: test how this will behave if a service or program is passed in as the agent
 class RequestHandler
@@ -30,8 +30,11 @@ class RequestHandler
     return nil if already_enqueued? ieid, type
 
     agent = OperationsAgent.first(:identifier => agent_identifier)
+    intentity = Intentity.first(:id => ieid.to_s)
 
-    if authorized_to_submit? agent, type
+    raise NoSuchIntEntity unless intentity
+
+    if authorized_to_submit? agent, type and (intentity.project.account == agent.account or agent.type == Operator)
       r = Request.new
       now = Time.now
 
@@ -44,7 +47,6 @@ class RequestHandler
 
       r.attributes = {
         :timestamp => now,
-        :ieid => ieid,
         :is_authorized => auth,
         :status => :enqueued,
         :request_type => type,
@@ -52,6 +54,7 @@ class RequestHandler
 
       r.operations_agent = agent
       r.account = agent.account
+      r.intentity = intentity
 
       r.save!
 
@@ -76,7 +79,7 @@ class RequestHandler
     if authorizing_agent and authorizing_agent.type == Operator and request.operations_agent.identifier != authorizing_agent.identifier
       request.is_authorized = true
 
-      PackageTracker.insert_op_event authorizing_agent.identifier, request.ieid, "Request Approval", "authorizing_agent: #{authorizing_agent.identifier}, request_id: #{request.id}"
+      PackageTracker.insert_op_event authorizing_agent.identifier, request.intentity.id, "Request Approval", "authorizing_agent: #{authorizing_agent.identifier}, request_id: #{request.id}"
     else
       raise NotAuthorized
     end
@@ -89,7 +92,7 @@ class RequestHandler
   # if user is not authorized, exception is raised
   
   def self.query_request requesting_agent_identifier, ieid, type
-    request = Request.first(:ieid => ieid, :request_type => type, :status => :enqueued)
+    request = Request.first(:request_type => type, :status => :enqueued, :intentity => {:id => ieid})
 
     # if user is not an operator, check if account of requesting user matches account of the request
     
@@ -141,7 +144,7 @@ class RequestHandler
   def self.query_ieid requesting_agent_identifier, ieid
     agent = OperationsAgent.first(:identifier => requesting_agent_identifier)
 
-    requests = Request.all(:ieid => ieid)
+    requests = Request.all(:intentity => {:id => ieid})
 
     raise NotAuthorized unless agent
 
@@ -163,7 +166,7 @@ class RequestHandler
   def self.dequeue_request request_id, operations_agent_identifier
     r = Request.get(request_id)
 
-    PackageTracker.insert_op_event operations_agent_identifier, r.ieid, "Request Released to Workspace", "request_id: #{r.id}"
+    PackageTracker.insert_op_event operations_agent_identifier, r.intentity.id, "Request Released to Workspace", "request_id: #{r.id}"
 
     r.status = :released_to_workspace
     r.save!
@@ -192,6 +195,6 @@ class RequestHandler
   end
 
   def self.already_enqueued? ieid, request_type
-    Request.first(:ieid => ieid.to_s, :request_type => request_type, :status => :enqueued) != nil
+    Request.first(:intentity => {:id => ieid.to_s}, :request_type => request_type, :status => :enqueued) != nil
   end
 end
