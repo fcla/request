@@ -143,21 +143,13 @@ class RequestHandler
 
   def self.query_ieid requesting_agent_identifier, ieid
     agent = OperationsAgent.first(:identifier => requesting_agent_identifier)
-
-    requests = Request.all(:intentity => {:id => ieid})
+    intentity = Intentity.first(:id => ieid)
 
     raise NotAuthorized unless agent
+    raise NoSuchIntEntity unless intentity
+    raise NotAuthorized unless intentity.project.account.code == agent.account.code or agent.type == Operator
 
-    requests.each do |request|
-      if agent.type == Operator
-      elsif agent.type == Contact 
-        raise NotAuthorized unless request.account == agent.account.code
-      else
-        raise NotAuthorized
-      end
-    end
-
-    return requests
+    return Request.all(:intentity => {:id => ieid})
   end
 
   # sets status of request to :released_to_workspace, dequeing it

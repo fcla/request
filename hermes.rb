@@ -90,6 +90,8 @@ module Hermes
         enqueued = RequestHandler.enqueue_request agent.identifier, get_type(params[:type]), params[:ieid] 
       rescue NotAuthorized
         halt 403
+      rescue NoSuchIntEntity
+        halt 404
       end
 
       halt 403 unless enqueued
@@ -127,7 +129,8 @@ module Hermes
       agent = get_agent
 
       begin
-        RequestHandler.delete_request agent.identifier, params[:ieid], get_type(params[:type])
+        deleted = RequestHandler.delete_request agent.identifier, params[:ieid], get_type(params[:type])
+        halt 404 if deleted == nil
       rescue NotAuthorized
         halt 403
       end
@@ -164,6 +167,8 @@ module Hermes
         @requests_by_ieid = RequestHandler.query_ieid agent.identifier, @ieid
       rescue NotAuthorized
         halt 403
+      rescue NoSuchIntEntity
+        halt 404
       end
 
       erb :ieid_requests

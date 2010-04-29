@@ -25,6 +25,7 @@ describe Hermes::App do
     add_operator a
     add_contact a, [:submit], "foobar", "foobar"
     add_contact b, [:submit], "gator", "gator"
+    add_operator b, "op_gator", "op_gator"
 
     @project = add_project a
 
@@ -189,7 +190,7 @@ describe Hermes::App do
     last_response.status.should == 404
   end
 
-  it "should return 404 on unauthorized dissemination request deletion from valid user" do
+  it "should return 403 on unauthorized dissemination request deletion from valid user" do
     ieid = generate_ieid
     add_intentity ieid, @project
 
@@ -200,12 +201,51 @@ describe Hermes::App do
     last_response.status.should == 403
   end
 
-  it "should return 404 on dissemination request from contact from different account" do
-    pending "code this"
+  it "should return 403 on dissemination request from contact from different account" do
+    ieid = generate_ieid
+    add_intentity ieid, @project
+
+    uri = "/requests/#{ieid}/disseminate"
+    authenticated_post uri, "gator", "gator"
+
+    last_response.status.should == 403
   end
 
-  it "should return 200 on dissemination request from operator from different account" do
-    pending "code"
+  it "should return 201 on dissemination request from operator from different account" do
+    ieid = generate_ieid
+    add_intentity ieid, @project
+
+    uri = "/requests/#{ieid}/disseminate"
+    authenticated_post uri, "op_gator", "op_gator"
+
+    last_response.status.should == 201
+  end
+
+  it "should return 404 on request to enqueue an event for a ieid that does not exist" do
+    ieid = generate_ieid
+
+    uri = "/requests/#{ieid}/disseminate"
+    authenticated_post uri, "operator", "operator"
+
+    last_response.status.should == 404
+  end
+
+  it "should return 404 on request to delete an event for a ieid that does not exist" do
+    ieid = generate_ieid
+
+    uri = "/requests/#{ieid}/disseminate"
+    authenticated_delete uri, "operator", "operator"
+
+    last_response.status.should == 404
+  end
+
+  it "should return 404 on request to query an event for a ieid that does not exist" do
+    ieid = generate_ieid
+
+    uri = "/requests/#{ieid}/disseminate"
+    authenticated_get uri, "operator", "operator"
+
+    last_response.status.should == 404
   end
 
   ###### WITHDRAW
@@ -296,13 +336,53 @@ describe Hermes::App do
     last_response.status.should == 403
   end
 
-  it "should return 404 on withdraw request from contact from different account" do
-    pending "code this"
+  it "should return 403 on withdraw request from contact from different account" do
+    ieid = generate_ieid
+    add_intentity ieid, @project
+
+    uri = "/requests/#{ieid}/withdraw"
+    authenticated_post uri, "gator", "gator"
+
+    last_response.status.should == 403
   end
 
-  it "should return 200 on withdraw request from operator from different account" do
-    pending "code"
+  it "should return 201 on withdraw request from operator from different account" do
+    ieid = generate_ieid
+    add_intentity ieid, @project
+
+    uri = "/requests/#{ieid}/withdraw"
+    authenticated_post uri, "op_gator", "op_gator"
+
+    last_response.status.should == 201
   end
+
+  it "should return 404 on request to enqueue an event for a ieid that does not exist" do
+    ieid = generate_ieid
+
+    uri = "/requests/#{ieid}/withdraw"
+    authenticated_post uri, "operator", "operator"
+
+    last_response.status.should == 404
+  end
+
+  it "should return 404 on request to delete an event for a ieid that does not exist" do
+    ieid = generate_ieid
+
+    uri = "/requests/#{ieid}/withdraw"
+    authenticated_delete uri, "operator", "operator"
+
+    last_response.status.should == 404
+  end
+
+  it "should return 404 on request to query an event for a ieid that does not exist" do
+    ieid = generate_ieid
+
+    uri = "/requests/#{ieid}/withdraw"
+    authenticated_get uri, "operator", "operator"
+
+    last_response.status.should == 404
+  end
+
 
   ###### PEEK
 
@@ -414,14 +494,52 @@ describe Hermes::App do
     last_response.status.should == 403
   end
 
-  it "should return 404 on peek request from contact from different account" do
-    pending "code this"
+  it "should return 403 on peek request from contact from different account" do
+    ieid = generate_ieid
+    add_intentity ieid, @project
+
+    uri = "/requests/#{ieid}/peek"
+    authenticated_post uri, "gator", "gator"
+
+    last_response.status.should == 403
   end
 
-  it "should return 200 on peek request from operator from different account" do
-    pending "code"
+  it "should return 201 on peek request from operator from different account" do
+    ieid = generate_ieid
+    add_intentity ieid, @project
+
+    uri = "/requests/#{ieid}/peek"
+    authenticated_post uri, "op_gator", "op_gator"
+
+    last_response.status.should == 201
   end
 
+  it "should return 404 on request to enqueue an event for a ieid that does not exist" do
+    ieid = generate_ieid
+
+    uri = "/requests/#{ieid}/peek"
+    authenticated_post uri, "operator", "operator"
+
+    last_response.status.should == 404
+  end
+
+  it "should return 404 on request to delete an event for a ieid that does not exist" do
+    ieid = generate_ieid
+
+    uri = "/requests/#{ieid}/peek"
+    authenticated_delete uri, "operator", "operator"
+
+    last_response.status.should == 404
+  end
+
+  it "should return 404 on request to query an event for a ieid that does not exist" do
+    ieid = generate_ieid
+
+    uri = "/requests/#{ieid}/peek"
+    authenticated_get uri, "operator", "operator"
+
+    last_response.status.should == 404
+  end
 
   ###### Approval Requests
   
@@ -439,7 +557,16 @@ describe Hermes::App do
   end
 
   it "should return 200 in response to a valid withdraw authorization request from an operator with a different account" do
-    pending "code"
+    ieid = generate_ieid
+    add_intentity ieid, @project
+
+    uri = "/requests/#{ieid}/withdraw"
+    authenticated_post uri, "contact", "foobar"
+
+    uri = "/requests/#{ieid}/withdraw/approve"
+    authenticated_post uri, "op_gator", "op_gator"
+
+    last_response.status.should == 200
   end
 
   it "should set package request is_authorized state to true after a valid authorization request on it" do
@@ -500,6 +627,14 @@ describe Hermes::App do
     last_response.status.should == 404
   end
 
+  it "should return 404 on request to approve an event for a ieid that does not exist" do
+    ieid = generate_ieid
+
+    uri = "/requests/#{ieid}/withdraw/approve"
+    authenticated_get uri, "operator", "operator"
+
+    last_response.status.should == 404
+  end
   ########## Query on IEID resource
 
   it "should return 200 OK in response to get on ieid resource" do
@@ -507,8 +642,11 @@ describe Hermes::App do
     add_intentity ieid, @project
 
     uri = "/requests/#{ieid}"
-    authenticated_get uri, "operator", "operator"
 
+    authenticated_get uri, "operator", "operator"
+    last_response.status.should == 200
+
+    authenticated_get uri, "op_gator", "op_gator"
     last_response.status.should == 200
   end
 
@@ -569,7 +707,23 @@ describe Hermes::App do
     response_doc.root["ieid"].should == ieid.to_s
   end
 
-  it "should return 404 on request on ieid resource from contact on different account" do
+  it "should return 403 on request on ieid resource from contact on different account" do
+    ieid = generate_ieid
+    add_intentity ieid, @project
+
+    uri = "/requests/#{ieid}"
+    authenticated_get uri, "gator", "gator"
+
+    last_response.status.should == 403
+  end
+
+  it "should return 404 on request on ieid resource if ieid does not exist" do
+    ieid = generate_ieid
+
+    uri = "/requests/#{ieid}"
+    authenticated_get uri, "operator", "operator"
+
+    last_response.status.should == 404
   end
 
   ###### Query by account
@@ -639,12 +793,20 @@ describe Hermes::App do
     end
   end
 
-  it "should return 403 in response to GET on query by account resource made by unauthorized user" do
+  it "should return 403 in response to GET on query by account resource made by contact from another account" do
 
     uri = "/query_requests?account=FDA"
     authenticated_get uri, "gator", "gator"
 
     last_response.status.should == 403
+  end
+
+  it "should return 200 in response to GET on query by account resource made by operator from another account" do
+
+    uri = "/query_requests?account=FDA"
+    authenticated_get uri, "op_gator", "op_gator"
+
+    last_response.status.should == 200
   end
 
   it "should return 400 in response to GET on query by account if account is missing" do
@@ -653,10 +815,6 @@ describe Hermes::App do
     authenticated_get uri, "contact", "foobar"
 
     last_response.status.should == 400
-  end
-
-  it "should return 404 on request on account resource from contact on different account" do
-    pending "code"
   end
 
   # post multiple requests with xml document
@@ -724,6 +882,43 @@ describe Hermes::App do
 
     uri = "/requests_by_xml"
     authenticated_post uri, "operator", "operator", doc
+
+    doc = LibXML::XML::Document.string last_response.body
+
+    doc.root["request_type"].should == "disseminate"
+
+    children = doc.root.children
+    children.length.should == 3
+
+    children.each do |child|
+      ([ieid1, ieid2, ieid3].include? child["ieid"].to_i).should == true
+      child["outcome"].should == "created"
+    end
+  end
+
+  it "should return XML document correctly reporting resources created in response to POST to requests_by_xml resource by operator from another account" do
+    ieid1 = generate_ieid
+    ieid2 = generate_ieid
+    ieid3 = generate_ieid
+
+    add_intentity ieid1, @project
+    add_intentity ieid2, @project
+    add_intentity ieid3, @project
+
+    doc =<<-XML_UPLOAD
+      <package_request_submission>
+        <requests type="disseminate">
+          <ieid_list>
+            <ieid>#{ieid1}</ieid>
+            <ieid>#{ieid2}</ieid>
+            <ieid>#{ieid3}</ieid>
+          </ieid_list>
+        </requests>
+      </package_request_submission>
+    XML_UPLOAD
+
+    uri = "/requests_by_xml"
+    authenticated_post uri, "op_gator", "op_gator", doc
 
     doc = LibXML::XML::Document.string last_response.body
 
@@ -823,29 +1018,45 @@ describe Hermes::App do
   end
 
   it "should return XML document correctly reporting resources not created in response to POST to requests_by_xml resource (wrong account)" do
-    pending "code"
+    ieid1 = generate_ieid
+    ieid2 = generate_ieid
+    ieid3 = generate_ieid
+
+    add_intentity ieid1, @project
+    add_intentity ieid2, @project
+    add_intentity ieid3, @project
+
+    doc =<<-XML_UPLOAD
+      <package_request_submission>
+        <requests type="disseminate">
+          <ieid_list>
+            <ieid>#{ieid1}</ieid>
+            <ieid>#{ieid2}</ieid>
+            <ieid>#{ieid3}</ieid>
+          </ieid_list>
+        </requests>
+      </package_request_submission>
+    XML_UPLOAD
+
+    uri = "/requests_by_xml"
+    authenticated_post uri, "gator", "gator", doc
+
+    doc = LibXML::XML::Document.string last_response.body
+
+    doc.root["request_type"].should == "disseminate"
+
+    children = doc.root.children
+    children.length.should == 3
+
+    children.each do |child|
+      ([ieid1, ieid2, ieid3].include? child["ieid"].to_i).should == true
+      child["outcome"].should == "not_created"
+      child["error"].should == "not_authorized"
+    end
   end
 
-  it "should return 404 on request to enqueue an event for a ieid that does not exist" do
-    pending "code"
+  it "should handle queries on ieids appropriatly" do
   end
-
-  it "should return 404 on request to dequeue an event for a ieid that does not exist" do
-    pending "code"
-  end
-
-  it "should return 404 on request to authorize an event for a ieid that does not exist" do
-    pending "code"
-  end
-
-  it "should return 404 on request to delete an event for a ieid that does not exist" do
-    pending "code"
-  end
-
-  it "should return 404 on request to query an event for a ieid that does not exist" do
-    pending "code"
-  end
-
 
   # query by parameters
 

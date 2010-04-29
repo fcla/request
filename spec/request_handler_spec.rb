@@ -395,37 +395,48 @@ describe RequestHandler do
     set_of_request_ids.include?(requests[3].id).should == true
   end
 
-  it "should allow operators to query all requests in a given ieid" do
+  it "should raise error on a search for requests on an ieid that does not exist" do
+    lambda { RequestHandler.query_ieid "operator", "1" }.should raise_error(NoSuchIntEntity)
+  end
+
+  it "should allow operators and contacts in account to query all requests in a given ieid" do
     ieid = rand(1000)
     add_intentity ieid, @project
 
     request_id1 = RequestHandler.enqueue_request "operator", :disseminate, ieid
-    request_id2 = RequestHandler.enqueue_request "operator", :withdraw, ieid
-    request_id3 = RequestHandler.enqueue_request "operator", :peek, ieid
+    request_id2 = RequestHandler.enqueue_request "operator", :peek, ieid
+    request_id3 = RequestHandler.enqueue_request "operator", :withdraw, ieid
 
-    set_of_request_ids = [request_id1, request_id2, request_id3]
+    RequestHandler.dequeue_request request_id1, "operator"
 
-    requests = RequestHandler.query_ieid "operator", ieid
+    list1 = RequestHandler.query_ieid "operator", ieid
+    list1.size.should == 3
+    list1.each {|request| request.intentity.id.should == ieid.to_s }
+    list1.each {|request| ([request_id1, request_id2, request_id3].include? request.id).should == true }
 
-    requests.length.should == 3
+    list2 = RequestHandler.query_ieid "op_diff_act", ieid
+    list2.size.should == 3
+    list2.each {|request| request.intentity.id.should == ieid.to_s }
+    list2.each {|request| ([request_id1, request_id2, request_id3].include? request.id).should == true }
 
-    set_of_request_ids.include?(requests[0].id).should == true
-    set_of_request_ids.include?(requests[1].id).should == true
-    set_of_request_ids.include?(requests[2].id).should == true
+    list3 = RequestHandler.query_ieid "contact", ieid
+    list3.size.should == 3
+    list3.each {|request| request.intentity.id.should == ieid.to_s }
+    list3.each {|request| ([request_id1, request_id2, request_id3].include? request.id).should == true }
   end
 
-  it "should property return nil on a search for requests on an account with no requests" do
-    requests = RequestHandler.query_ieid "operator", "1"
+  it "should not allow contacts in another account and invalid users to query all requests in a given ieid" do
+    ieid = rand(1000)
+    add_intentity ieid, @project
 
-    requests.length.should == 0
-  end
+    request_id1 = RequestHandler.enqueue_request "operator", :disseminate, ieid
+    request_id2 = RequestHandler.enqueue_request "operator", :peek, ieid
+    request_id3 = RequestHandler.enqueue_request "operator", :withdraw, ieid
 
-  it "should allow privileged users to query all requests in a given ieid" do
-    pending "integration to service that knows what account a given ieid belongs to"
-  end
+    RequestHandler.dequeue_request request_id1, "operator"
 
-  it "should not allow non-privileged users to query all requests in a given ieid" do
-    pending "integration to service that knows what account a given ieid belongs to"
+    lambda { RequestHandler.query_ieid "contact_diff_act", ieid }.should raise_error(NotAuthorized)
+    lambda { RequestHandler.query_ieid "barbaz", ieid }.should raise_error(NotAuthorized)
   end
 
   it "should dequeue requests" do
@@ -474,23 +485,17 @@ describe RequestHandler do
   end
 
   it "should raise error if enqueing a request for an ieid that does not exist in intentity table" do
-    pending "code me"
+    ieid = rand(1000)
+    lambda { RequestHandler.enqueue_request "operator", :disseminate, ieid }.should raise_error(NoSuchIntEntity)
   end
 
-  it "should raise error if dequeing a request for an ieid that does not exist in intentity table" do
-    pending "code me"
+  it "should return nil if deleting a request for an ieid that does not exist in intentity table" do
+    ieid = rand(1000)
+    RequestHandler.delete_request("operator", ieid, :disseminate).should == nil
   end
 
-  it "should raise error if deleting a request for an ieid that does not exist in intentity table" do
-    pending "code me"
+  it "should return nil if querying a request for an ieid that does not exist in intentity table" do
+    ieid = rand(1000)
+    RequestHandler.query_request("operator", ieid, :disseminate).should == nil
   end
-
-  it "should raise error if querying a request for an ieid that does not exist in intentity table" do
-    pending "code me"
-  end
-
-  it "should raise error if authorizing a request for an ieid that does not exist in intentity table" do
-    pending "code me"
-  end
-
 end
