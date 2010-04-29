@@ -34,7 +34,7 @@ class RequestHandler
 
     raise NoSuchIntEntity unless intentity
 
-    if authorized_to_submit? agent, type and (intentity.project.account == agent.account or agent.type == Operator)
+    if authorized_to_submit? agent, type and (intentity.project.account.code == agent.account.code or agent.type == Operator)
       r = Request.new
       now = Time.now
 
