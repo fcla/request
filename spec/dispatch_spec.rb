@@ -12,7 +12,7 @@ describe Dispatch do
   end
 
   after(:each) do
-    FileUtils.rm_rf "/tmp/d2ws"
+    FileUtils.rm_rf Dir.glob("/tmp/d2ws/*")
   end
 
   it "should create a dissemination sub-wip" do

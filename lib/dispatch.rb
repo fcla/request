@@ -1,9 +1,12 @@
 require 'wip'
 require 'uri'
+require 'daitss/config'
+require 'workspace'
 
 class Dispatch
 
-  WORKSPACE = ENV["WORKSPACE"]
+  Daitss::CONFIG.load_from_env
+  WORKSPACE = Workspace.new(Daitss::CONFIG['workspace']).path 
   PREFIX_URI = "test:/"
   DISSEMINATE_DROP_PATH = "/tmp/disseminations/"
   
