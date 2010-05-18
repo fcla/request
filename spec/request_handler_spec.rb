@@ -440,7 +440,7 @@ describe RequestHandler do
   end
 
   it "should dequeue requests" do
-    a = add_account
+    a = Account.first(:code => "FDA")
     p = add_program a
 
     ieid = rand(1000)

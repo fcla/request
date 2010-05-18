@@ -19,7 +19,7 @@ def create_op_agent
     :description => "request dispatch program",
     :active_start_date => Time.at(0),
     :active_end_date => Time.now + (86400 * 365),
-    :identifier => __FILE__
+    :identifier => File.basename(__FILE__)
   }
 
   fda_account = Account.first(:code => 'FDA', :name => 'FDA')
