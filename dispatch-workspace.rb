@@ -33,7 +33,7 @@ def create_op_agent
   p.save!
 end
 
-create_op_agent unless OperationsAgent.first(:identifier => __FILE__)
+create_op_agent unless OperationsAgent.first(:identifier => File.basename(__FILE__))
 
 enqueued_and_authorized = Request.all(:is_authorized => true, :status => :enqueued, :order => [ :timestamp.asc ])
 
@@ -46,6 +46,6 @@ enqueued_and_authorized.each do |request|
     request.save!
   end
 
-  PackageTracker.insert_op_event __FILE__, request.intentity.id, "Request Released To Workspace", "request_id: #{request.id}"
+  PackageTracker.insert_op_event File.basename(__FILE__), request.intentity.id, "Request Released To Workspace", "request_id: #{request.id}"
 end
 
