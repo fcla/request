@@ -39,11 +39,11 @@ def create_op_agent
   return p
 end
 
-def insert_op_event agent, sip
+def insert_op_event agent, sip, request_id
   e = OperationsEvent.new
   e.attributes = { :timestamp => Time.now,
                    :event_name => "Request Released To Workspace",
-                   :notes => "request_id: #{request.id}" }
+                   :notes => "request_id: #{request_id}" }
 
   e.operations_agent = agent
   e.submitted_sip = sip
@@ -64,6 +64,6 @@ enqueued_and_authorized.each do |request|
     request.save!
   end
 
-  insert_op_event agent, request.submitted_sip
+  insert_op_event agent, request.submitted_sip, request.id
 end
 
