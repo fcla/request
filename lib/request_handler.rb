@@ -4,7 +4,7 @@ require 'db/operations_events'
 require 'db/accounts'
 require 'db/projects'
 require 'db/keys'
-require 'package_tracker'
+require 'db/sip'
 
 class InvalidRequestType < StandardError; end
 class NotAuthorized < StandardError; end
@@ -20,21 +20,19 @@ class RequestHandler
   # Adds OperationsEvent
 
   def self.enqueue_request agent_identifier, type, ieid
+    sip_record = SubmittedSip.first(:ieid => ieid)
+    raise NoSuchIntEntity unless sip_record
 
     # raise error if specified type is not supported
     # TODO: move to validation in model?
     raise InvalidRequestType, "#{type} is not a supported request type" unless supported? type
 
     # if request already enqueued or in process for given ieid, refuse to enqueue new request
-    
-    return nil if already_enqueued? ieid, type
+    return nil if already_enqueued? sip_record, type
 
     agent = OperationsAgent.first(:identifier => agent_identifier)
-    intentity = Intentity.first(:id => ieid.to_s)
 
-    raise NoSuchIntEntity unless intentity
-
-    if authorized_to_submit? agent, type and (intentity.project.account.code == agent.account.code or agent.type == Operator)
+    if authorized_to_submit? agent, type and (sip_record.project.account.code == agent.account.code or agent.type == Operator)
       r = Request.new
       now = Time.now
 
@@ -54,11 +52,11 @@ class RequestHandler
 
       r.operations_agent = agent
       r.account = agent.account
-      r.intentity = intentity
+      r.submitted_sip = sip_record
 
       r.save!
 
-      PackageTracker.insert_op_event agent.identifier, ieid, "Request Submission", "request_type: #{type}, request_id: #{r.id}"
+      add_op_event agent, sip_record, "Request Submission", "request_type: #{type}, request_id: #{r.id}"
 
       return r.id
     else
@@ -73,13 +71,14 @@ class RequestHandler
   def self.authorize_request request_id, authorizing_agent_identifier
     request = Request.get(request_id)
     now = Time.now
+    sip = request.submitted_sip
 
     authorizing_agent = OperationsAgent.first(:identifier => authorizing_agent_identifier)
 
     if authorizing_agent and authorizing_agent.type == Operator and request.operations_agent.identifier != authorizing_agent.identifier
       request.is_authorized = true
 
-      PackageTracker.insert_op_event authorizing_agent.identifier, request.intentity.id, "Request Approval", "authorizing_agent: #{authorizing_agent.identifier}, request_id: #{request.id}"
+      add_op_event authorizing_agent, sip, "Request Approval", "authorizing_agent: #{authorizing_agent.identifier}, request_id: #{request.id}"
     else
       raise NotAuthorized
     end
@@ -92,7 +91,11 @@ class RequestHandler
   # if user is not authorized, exception is raised
   
   def self.query_request requesting_agent_identifier, ieid, type
-    request = Request.first(:request_type => type, :status => :enqueued, :intentity => {:id => ieid})
+    sip = SubmittedSip.first(:ieid => ieid)
+
+    return nil unless sip
+
+    request = sip.requests.first(:request_type => type, :status => :enqueued)
 
     # if user is not an operator, check if account of requesting user matches account of the request
     
@@ -116,10 +119,14 @@ class RequestHandler
   
   def self.delete_request requesting_agent_identifier, ieid, type
     request = query_request requesting_agent_identifier, ieid, type
+    agent = OperationsAgent.first(:identifier => requesting_agent_identifier)
 
     return nil unless request
 
-      PackageTracker.insert_op_event requesting_agent_identifier, ieid, "Request Deletion", "request_id: #{request.id}"
+    sip = request.submitted_sip
+
+    add_op_event agent, sip, "Request Deletion", "request_id: #{request.id}"
+
     return request.destroy!
   end
 
@@ -143,28 +150,43 @@ class RequestHandler
 
   def self.query_ieid requesting_agent_identifier, ieid
     agent = OperationsAgent.first(:identifier => requesting_agent_identifier)
-    intentity = Intentity.first(:id => ieid)
+    sip = SubmittedSip.first(:ieid => ieid)
 
     raise NotAuthorized unless agent
-    raise NoSuchIntEntity unless intentity
-    raise NotAuthorized unless intentity.project.account.code == agent.account.code or agent.type == Operator
+    raise NoSuchIntEntity unless sip
+    raise NotAuthorized unless sip.project.account.code == agent.account.code or agent.type == Operator
 
-    return Request.all(:intentity => {:id => ieid})
+    return sip.requests
   end
 
   # sets status of request to :released_to_workspace, dequeing it
-  # TODO: add package tracker event
 
   def self.dequeue_request request_id, operations_agent_identifier
     r = Request.get(request_id)
+    agent = OperationsAgent.first(:identifier => operations_agent_identifier)
+    sip = r.submitted_sip
 
-    PackageTracker.insert_op_event operations_agent_identifier, r.intentity.id, "Request Released to Workspace", "request_id: #{r.id}"
+    add_op_event agent, sip, "Request Released to Workspace", "request_id: #{r.id}"
 
     r.status = :released_to_workspace
     r.save!
   end
 
   private
+
+  # inserts an op event
+  def self.add_op_event agent, sip, event_name, notes
+    e = OperationsEvent.new
+
+    e.attributes = { :timestamp => Time.now,
+                     :event_name => event_name,
+                     :notes => notes }
+
+    e.operations_agent = agent
+    e.submitted_sip = sip
+
+    e.save!
+  end
 
   # returns true if type is supported
   def self.supported? type
@@ -186,7 +208,7 @@ class RequestHandler
     end
   end
 
-  def self.already_enqueued? ieid, request_type
-    Request.first(:intentity => {:id => ieid.to_s}, :request_type => request_type, :status => :enqueued) != nil
+  def self.already_enqueued? sip, request_type
+    sip.requests.all(:request_type => request_type, :status => :enqueued).length != 0
   end
 end

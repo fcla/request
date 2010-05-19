@@ -1,17 +1,3 @@
-require 'db/int_entity'
-require 'db/datafile'
-require 'db/datafile_severe_element'
-require 'db/severe_element'
-require 'db/objectformat'
-require 'db/format'
-require 'db/document'
-require 'db/brokenlinks'
-require 'db/image'
-require 'db/text'
-require 'db/bitstream'
-require 'db/message_digest'
-require 'db/audio'
-
 def add_account name = "FDA", code = "FDA"
   a = Account.new
   a.attributes = { :name => name,
@@ -111,15 +97,13 @@ def add_project account, name = "PRJ", code = "PRJ"
   return p
 end
 
-def add_intentity ieid, project
-  i = Intentity.new
+def add_sip ieid, project
+  i = SubmittedSip.new
 
-  i.attributes = { :id => ieid,
-                   :original_name => "test package",
-                   :entity_id => "test",
-                   :volume => "vol",
-                   :issue => "issue",
-                   :title => "title" }
+  i.attributes = { :ieid => ieid,
+                   :package_name => "test package",
+                   :package_size => 3000,
+                   :number_of_datafiles => 4 }
 
   i.project = project
   i.save!

@@ -56,11 +56,11 @@ module Hermes
 
         while req = array_of_requests_by_account.shift
 
-          if to_return[req.intentity.id]
-            to_return[req.intentity.id].push req
+          if to_return[req.submitted_sip.ieid]
+            to_return[req.submitted_sip.ieid].push req
           else
-            to_return[req.intentity.id] = []
-            to_return[req.intentity.id].push req
+            to_return[req.submitted_sip.ieid] = []
+            to_return[req.submitted_sip.ieid].push req
           end
         end
 
@@ -204,7 +204,7 @@ module Hermes
         ieid = ieid_node.first
 
         begin
-          enqueued = RequestHandler.enqueue_request agent.identifier, @type, ieid
+          enqueued = RequestHandler.enqueue_request agent.identifier, @type, ieid.to_s
         rescue NotAuthorized
           @not_authorized.push ieid
         else

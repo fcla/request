@@ -23,7 +23,7 @@ describe RequestHandler do
 
   it "should enqueue a new disseminate request requested by an operator" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    sip = add_sip ieid, @project
 
     now = Time.now
 
@@ -32,7 +32,7 @@ describe RequestHandler do
     just_added = Request.get(id)
 
     just_added.should_not == nil
-    just_added.intentity.id.should == ieid.to_s
+    just_added.submitted_sip.ieid.should == ieid.to_s
     just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
@@ -40,7 +40,7 @@ describe RequestHandler do
     just_added.operations_agent.identifier.should == "operator"
     just_added.account.should == just_added.operations_agent.account
 
-    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
+    pt_event = sip.operations_events.first(:event_name => "Request Submission") 
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -50,7 +50,7 @@ describe RequestHandler do
 
   it "should enqueue a new withdraw request requested by an operator" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    sip = add_sip ieid, @project
 
     now = Time.now
 
@@ -59,7 +59,7 @@ describe RequestHandler do
     just_added = Request.get(id)
 
     just_added.should_not == nil
-    just_added.intentity.id.should == ieid.to_s
+    just_added.submitted_sip.ieid.should == ieid.to_s
     just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == false
     just_added.status.should == :enqueued
@@ -67,7 +67,7 @@ describe RequestHandler do
     just_added.operations_agent.identifier.should == "operator"
     just_added.account.should == just_added.operations_agent.account
 
-    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
+    pt_event = sip.operations_events.first(:event_name => "Request Submission") 
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -77,7 +77,7 @@ describe RequestHandler do
 
   it "should enqueue a new peek request requested by an operator" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    sip = add_sip ieid, @project
 
     now = Time.now
 
@@ -86,7 +86,7 @@ describe RequestHandler do
     just_added = Request.get(id)
 
     just_added.should_not == nil
-    just_added.intentity.id.should == ieid.to_s
+    just_added.submitted_sip.ieid.should == ieid.to_s
     just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
@@ -94,7 +94,7 @@ describe RequestHandler do
     just_added.operations_agent.identifier.should == "operator"
     just_added.account.should == just_added.operations_agent.account
 
-    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
+    pt_event = sip.operations_events.first(:event_name => "Request Submission") 
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -104,14 +104,14 @@ describe RequestHandler do
 
   it "should raise error if attempting to enqueue unknown request type" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    add_sip ieid, @project
 
     lambda { id = RequestHandler.enqueue_request "operator", :foo, ieid }.should raise_error(InvalidRequestType)
   end
 
   it "should enqueue a new peek request requested by a privileged user" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    sip = add_sip ieid, @project
 
     now = Time.now
 
@@ -120,7 +120,7 @@ describe RequestHandler do
     just_added = Request.get(id)
 
     just_added.should_not == nil
-    just_added.intentity.id.should == ieid.to_s
+    just_added.submitted_sip.ieid.should == ieid.to_s
     just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
@@ -128,7 +128,7 @@ describe RequestHandler do
     just_added.operations_agent.identifier.should == "contact"
     just_added.account.should == just_added.operations_agent.account
 
-    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
+    pt_event = sip.operations_events.first(:event_name => "Request Submission") 
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -138,7 +138,7 @@ describe RequestHandler do
 
   it "should enqueue a new withdrawal request requested by a privileged user" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    sip = add_sip ieid, @project
 
     now = Time.now
 
@@ -147,7 +147,7 @@ describe RequestHandler do
     just_added = Request.get(id)
 
     just_added.should_not == nil
-    just_added.intentity.id.should == ieid.to_s
+    just_added.submitted_sip.ieid.should == ieid.to_s
     just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == false
     just_added.status.should == :enqueued
@@ -155,7 +155,7 @@ describe RequestHandler do
     just_added.operations_agent.identifier.should == "contact"
     just_added.account.should == just_added.operations_agent.account
 
-    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
+    pt_event = sip.operations_events.first(:event_name => "Request Submission") 
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -165,7 +165,7 @@ describe RequestHandler do
 
   it "should enqueue a new peek request requested by a privileged user" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    sip = add_sip ieid, @project
 
     now = Time.now
 
@@ -174,7 +174,7 @@ describe RequestHandler do
     just_added = Request.get(id)
 
     just_added.should_not == nil
-    just_added.intentity.id.should == ieid.to_s
+    just_added.submitted_sip.ieid.should == ieid.to_s
     just_added.timestamp.to_time.should be_close(now, 1.0)
     just_added.is_authorized.should == true
     just_added.status.should == :enqueued
@@ -182,7 +182,7 @@ describe RequestHandler do
     just_added.operations_agent.identifier.should == "contact"
     just_added.account.should == just_added.operations_agent.account
 
-    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Submission")
+    pt_event = sip.operations_events.first(:event_name => "Request Submission") 
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -192,28 +192,28 @@ describe RequestHandler do
 
   it "should not enqueue a new disseminate request requested by a non-privileged user" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    add_sip ieid, @project
 
     lambda { RequestHandler.enqueue_request "foobar", :disseminate, ieid }.should raise_error(NotAuthorized)
   end
 
   it "should not enqueue a new withdraw request requested by a non-privileged user" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    add_sip ieid, @project
 
     lambda { RequestHandler.enqueue_request "foobar", :withdraw, ieid }.should raise_error(NotAuthorized)
   end
 
   it "should not enqueue a new peek request requested by a non-privileged user" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    add_sip ieid, @project
 
     lambda { RequestHandler.enqueue_request "foobar", :peek, ieid }.should raise_error(NotAuthorized)
   end
 
   it "should not enqueue a request if a request of that type is already enqueued for a given ieid" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    add_sip ieid, @project
 
     id = RequestHandler.enqueue_request "operator", :disseminate, ieid
     id2 = RequestHandler.enqueue_request "operator", :disseminate, ieid
@@ -221,9 +221,9 @@ describe RequestHandler do
     id2.should == nil
   end
 
-  it "should allow an authorized operator to approve a withdrawal request, add add a package tracker record for the approval" do
+  it "should allow an authorized operator to approve a withdrawal request, add add an ops event record for the approval" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    sip = add_sip ieid, @project
 
     request_id = RequestHandler.enqueue_request "operator", :withdraw, ieid
 
@@ -234,7 +234,7 @@ describe RequestHandler do
 
     request_record.is_authorized.should == true
 
-    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Approval")
+    pt_event = sip.operations_events.first(:event_name => "Request Approval") 
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -244,7 +244,7 @@ describe RequestHandler do
 
   it "should not allow an operator to approve own requests" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    add_sip ieid, @project
 
     request_id = RequestHandler.enqueue_request "operator", :withdraw, ieid
 
@@ -253,7 +253,7 @@ describe RequestHandler do
 
   it "should not allow a regular user to to approve own requests" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    add_sip ieid, @project
 
     request_id = RequestHandler.enqueue_request "contact", :withdraw, ieid
 
@@ -262,7 +262,7 @@ describe RequestHandler do
 
   it "should not allow a regular user to to approve another user's requests" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    add_sip ieid, @project
 
     request_id = RequestHandler.enqueue_request "contact", :withdraw, ieid
 
@@ -271,7 +271,7 @@ describe RequestHandler do
 
   it "should allow an operator to query for requests by ieid and type" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    add_sip ieid, @project
 
     request_id = RequestHandler.enqueue_request "operator", :disseminate, ieid
 
@@ -283,7 +283,7 @@ describe RequestHandler do
 
   it "should allow an authorized user to query for requests by ieid and type" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    add_sip ieid, @project
 
     request_id = RequestHandler.enqueue_request "contact", :disseminate, ieid
 
@@ -295,7 +295,7 @@ describe RequestHandler do
 
   it "should allow an operator to delete a request by type and ieid" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    sip = add_sip ieid, @project
     
     request_id = RequestHandler.enqueue_request "operator", :disseminate, ieid
 
@@ -305,7 +305,7 @@ describe RequestHandler do
     outcome.should == true
     Request.get(request_id).should == nil
 
-    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Deletion")
+    pt_event = sip.operations_events.first(:event_name => "Request Deletion") 
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -315,7 +315,7 @@ describe RequestHandler do
 
   it "should allow an authorized user to delete a request by type and ieid" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    sip = add_sip ieid, @project
     
     request_id = RequestHandler.enqueue_request "contact", :disseminate, ieid
 
@@ -325,7 +325,7 @@ describe RequestHandler do
     outcome.should == true
     Request.get(request_id).should == nil
 
-    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Deletion")
+    pt_event = sip.operations_events.first(:event_name => "Request Deletion") 
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -339,10 +339,10 @@ describe RequestHandler do
     ieid3 = rand(1000)
     ieid4 = rand(1000)
 
-    add_intentity ieid1, @project
-    add_intentity ieid2, @project
-    add_intentity ieid3, @project
-    add_intentity ieid4, @project
+    add_sip ieid1, @project
+    add_sip ieid2, @project
+    add_sip ieid3, @project
+    add_sip ieid4, @project
 
     request_id1 = RequestHandler.enqueue_request "operator", :disseminate, ieid1
     request_id2 = RequestHandler.enqueue_request "operator", :disseminate, ieid2
@@ -373,10 +373,10 @@ describe RequestHandler do
     ieid3 = rand(1000)
     ieid4 = rand(1000)
 
-    add_intentity ieid1, @project
-    add_intentity ieid2, @project
-    add_intentity ieid3, @project
-    add_intentity ieid4, @project
+    add_sip ieid1, @project
+    add_sip ieid2, @project
+    add_sip ieid3, @project
+    add_sip ieid4, @project
 
     request_id1 = RequestHandler.enqueue_request "contact", :disseminate, ieid1
     request_id2 = RequestHandler.enqueue_request "contact", :disseminate, ieid2
@@ -401,7 +401,7 @@ describe RequestHandler do
 
   it "should allow operators and contacts in account to query all requests in a given ieid" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    add_sip ieid, @project
 
     request_id1 = RequestHandler.enqueue_request "operator", :disseminate, ieid
     request_id2 = RequestHandler.enqueue_request "operator", :peek, ieid
@@ -411,23 +411,23 @@ describe RequestHandler do
 
     list1 = RequestHandler.query_ieid "operator", ieid
     list1.size.should == 3
-    list1.each {|request| request.intentity.id.should == ieid.to_s }
+    list1.each {|request| request.submitted_sip.ieid.should == ieid.to_s }
     list1.each {|request| ([request_id1, request_id2, request_id3].include? request.id).should == true }
 
     list2 = RequestHandler.query_ieid "op_diff_act", ieid
     list2.size.should == 3
-    list2.each {|request| request.intentity.id.should == ieid.to_s }
+    list2.each {|request| request.submitted_sip.ieid.should == ieid.to_s }
     list2.each {|request| ([request_id1, request_id2, request_id3].include? request.id).should == true }
 
     list3 = RequestHandler.query_ieid "contact", ieid
     list3.size.should == 3
-    list3.each {|request| request.intentity.id.should == ieid.to_s }
+    list3.each {|request| request.submitted_sip.ieid.should == ieid.to_s }
     list3.each {|request| ([request_id1, request_id2, request_id3].include? request.id).should == true }
   end
 
   it "should not allow contacts in another account and invalid users to query all requests in a given ieid" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    add_sip ieid, @project
 
     request_id1 = RequestHandler.enqueue_request "operator", :disseminate, ieid
     request_id2 = RequestHandler.enqueue_request "operator", :peek, ieid
@@ -444,7 +444,7 @@ describe RequestHandler do
     p = add_program a
 
     ieid = rand(1000)
-    add_intentity ieid, @project
+    sip = add_sip ieid, @project
 
     request_id = RequestHandler.enqueue_request "operator", :disseminate, ieid
 
@@ -455,7 +455,7 @@ describe RequestHandler do
 
     r.status.should == :released_to_workspace
 
-    pt_event = OperationsEvent.first(:ieid => ieid, :event_name => "Request Released to Workspace")
+    pt_event = sip.operations_events.first(:event_name => "Request Released to Workspace") 
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -465,36 +465,36 @@ describe RequestHandler do
 
   it "shouldn't allow a non-existant user to queue a request" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    add_sip ieid, @project
 
     lambda { RequestHandler.enqueue_request "barbaz", :disseminate, ieid }.should raise_error(NotAuthorized)
   end
 
   it "shouldn't allow a user belonging to a different account from the package to queue a request" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    add_sip ieid, @project
 
     lambda { RequestHandler.enqueue_request "contact_diff_act", :disseminate, ieid }.should raise_error(NotAuthorized)
   end
   
   it "should allow an operator belonging to a different account from the package to queue a request" do
     ieid = rand(1000)
-    add_intentity ieid, @project
+    add_sip ieid, @project
 
     lambda { RequestHandler.enqueue_request "op_diff_act", :disseminate, ieid }.should_not raise_error(NotAuthorized)
   end
 
-  it "should raise error if enqueing a request for an ieid that does not exist in intentity table" do
+  it "should raise error if enqueing a request for an ieid that does not exist in sip table" do
     ieid = rand(1000)
     lambda { RequestHandler.enqueue_request "operator", :disseminate, ieid }.should raise_error(NoSuchIntEntity)
   end
 
-  it "should return nil if deleting a request for an ieid that does not exist in intentity table" do
+  it "should return nil if deleting a request for an ieid that does not exist in sip table" do
     ieid = rand(1000)
     RequestHandler.delete_request("operator", ieid, :disseminate).should == nil
   end
 
-  it "should return nil if querying a request for an ieid that does not exist in intentity table" do
+  it "should return nil if querying a request for an ieid that does not exist in sip table" do
     ieid = rand(1000)
     RequestHandler.query_request("operator", ieid, :disseminate).should == nil
   end
