@@ -1,112 +1,127 @@
-def add_account name = "FDA", code = "FDA"
-  a = Account.new
-  a.attributes = { :name => name,
-                   :code => code }
-  a.save!
+require 'rubygems'
+require 'bundler'
+Bundler.setup
+require 'rack/test'
 
-  return a
-end
+Spec::Runner.configure do |config|
 
-def add_operator account, identifier = "operator", password = "operator"
-  o = Operator.new  
+  def app
+    Sinatra::Application
+  end
 
-  o.attributes = { :description => "operator",
-    :active_start_date => Time.at(0),
-    :active_end_date => Time.now + (86400 * 365),
-    :identifier => identifier,
-    :first_name => "Op",
-    :last_name => "Perator",
-    :email => "operator@ufl.edu",
-    :phone => "666-6666",
-    :address => "FCLA" }
+  config.include Rack::Test::Methods
 
-  o.account = account
+  def add_account name = "FDA", code = "FDA"
+    a = Account.new
+    a.attributes = { :name => name,
+      :code => code }
+    a.save!
 
-  k = AuthenticationKey.new
-  k.attributes = { :auth_key => Digest::SHA1.hexdigest(password) }
+    return a
+  end
 
-  o.authentication_key = k
-  o.save!
-end
+  def add_operator account, identifier = "operator", password = "operator"
+    o = Operator.new
+
+    o.attributes = { :description => "operator",
+      :active_start_date => Time.at(0),
+      :active_end_date => Time.now + (86400 * 365),
+      :identifier => identifier,
+      :first_name => "Op",
+      :last_name => "Perator",
+      :email => "operator@ufl.edu",
+      :phone => "666-6666",
+      :address => "FCLA" }
+
+    o.account = account
+
+    k = AuthenticationKey.new
+    k.attributes = { :auth_key => Digest::SHA1.hexdigest(password) }
+
+    o.authentication_key = k
+    o.save!
+  end
 
 
-def add_contact account, permissions = [:disseminate, :withdraw, :peek], identifier = "contact", password = "foobar"
-  c = Contact.new
-  c.attributes = { :description => "contact",
-    :active_start_date => Time.at(0),
-    :active_end_date => Time.now + (86400 * 365),
-    :identifier => identifier,
-    :first_name => "Foo",
-    :last_name => "Bar",
-    :email => "foobar@ufl.edu",
-    :phone => "555-5555",
-    :address => "123 Toontown",
-    :permissions => permissions  }
+  def add_contact account, permissions = [:disseminate, :withdraw, :peek], identifier = "contact", password = "foobar"
+    c = Contact.new
+    c.attributes = { :description => "contact",
+      :active_start_date => Time.at(0),
+      :active_end_date => Time.now + (86400 * 365),
+      :identifier => identifier,
+      :first_name => "Foo",
+      :last_name => "Bar",
+      :email => "foobar@ufl.edu",
+      :phone => "555-5555",
+      :address => "123 Toontown",
+      :permissions => permissions  }
 
-  c.account = account
+    c.account = account
 
-  j = AuthenticationKey.new
-  j.attributes = { :auth_key => Digest::SHA1.hexdigest(password) }
+    j = AuthenticationKey.new
+    j.attributes = { :auth_key => Digest::SHA1.hexdigest(password) }
 
-  c.authentication_key = j
-  c.save!
-end
+    c.authentication_key = j
+    c.save!
+  end
 
-def add_service account, identifier="http://request.dev.fcla.edu", password = "request", description = "d2 request service"
-  s = Service.new
-  s.attributes = { :description => description,
-                   :active_start_date => Time.at(0),
-                   :active_end_date => Time.now + (86400 * 365),
-                   :identifier => identifier }
+  def add_service account, identifier="http://request.dev.fcla.edu", password = "request", description = "d2 request service"
+    s = Service.new
+    s.attributes = { :description => description,
+      :active_start_date => Time.at(0),
+      :active_end_date => Time.now + (86400 * 365),
+      :identifier => identifier }
 
-  s.account = account
+    s.account = account
 
-  j = AuthenticationKey.new
-  j.attributes = { :auth_key => Digest::SHA1.hexdigest(password) }
+    j = AuthenticationKey.new
+    j.attributes = { :auth_key => Digest::SHA1.hexdigest(password) }
 
-  s.authentication_key = j
-  s.save!
-end
+    s.authentication_key = j
+    s.save!
+  end
 
-def add_program account, identifier="bianchi:/Users/manny/code/git/request/poll-workspace", password = "poller", description = "Request service poller"
-  p = Program.new
-  p.attributes = { :description => description,
-                   :active_start_date => Time.at(0),
-                   :active_end_date => Time.now + (86400 * 365),
-                   :identifier => identifier }
+  def add_program account, identifier="bianchi:/Users/manny/code/git/request/poll-workspace", password = "poller", description = "Request service poller"
+    p = Program.new
+    p.attributes = { :description => description,
+      :active_start_date => Time.at(0),
+      :active_end_date => Time.now + (86400 * 365),
+      :identifier => identifier }
 
-  p.account = account
+    p.account = account
 
-  j = AuthenticationKey.new
-  j.attributes = { :auth_key => Digest::SHA1.hexdigest(password) }
+    j = AuthenticationKey.new
+    j.attributes = { :auth_key => Digest::SHA1.hexdigest(password) }
 
-  p.authentication_key = j
-  p.save!
+    p.authentication_key = j
+    p.save!
 
-  return p
-end
+    return p
+  end
 
-def add_project account, name = "PRJ", code = "PRJ"
-  p = Project.new
-  p.attributes = { :name => name,
-                   :code => code }
+  def add_project account, name = "PRJ", code = "PRJ"
+    p = Project.new
+    p.attributes = { :name => name,
+      :code => code }
 
-  p.account = account
-  p.save!
+    p.account = account
+    p.save!
 
-  return p
-end
+    return p
+  end
 
-def add_sip ieid, project
-  i = SubmittedSip.new
+  def add_sip ieid, project
+    i = SubmittedSip.new
 
-  i.attributes = { :ieid => ieid,
-                   :package_name => "test package",
-                   :package_size => 3000,
-                   :number_of_datafiles => 4 }
+    i.attributes = { :ieid => ieid,
+      :package_name => "test package",
+      :package_size => 3000,
+      :number_of_datafiles => 4 }
 
-  i.project = project
-  i.save!
+    i.project = project
+    i.save!
 
-  return i
+    return i
+  end
+
 end

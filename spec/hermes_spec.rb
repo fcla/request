@@ -1,3 +1,5 @@
+require 'helper'
+
 require 'spec'
 require 'rack/test'
 require 'sinatra'
@@ -6,13 +8,9 @@ require 'helper'
 require 'base64'
 require 'libxml'
 
-describe Hermes::App do
 
-  include Rack::Test::Methods
+describe 'request service' do
 
-  def app
-    Hermes::App
-  end
 
   before(:each) do
     DataMapper.setup(:default, "sqlite3://#{Dir.pwd}/data/request.db")
@@ -542,7 +540,7 @@ describe Hermes::App do
   end
 
   ###### Approval Requests
-  
+
   it "should return 200 in response to a valid withdraw authorization request" do
     ieid = generate_ieid
     add_sip ieid, @project
@@ -727,7 +725,7 @@ describe Hermes::App do
   end
 
   ###### Query by account
-  
+
   it "should return 200 OK in response to GET on requests_by_account resource" do
 
     uri = "/query_requests?account=FDA"
@@ -762,7 +760,7 @@ describe Hermes::App do
     uri = "/query_requests?account=FDA"
     authenticated_get uri, "operator", "operator"
 
-    # parse the XML document returned from the request service, testing the nodes for 
+    # parse the XML document returned from the request service, testing the nodes for
     # expected stucture, attributes, and values
     # TODO: refactor
 
@@ -818,7 +816,7 @@ describe Hermes::App do
   end
 
   # post multiple requests with xml document
-  
+
   it "should return 201 CREATED in response to post to requests_by_xml resource, and create a new resource for each ieid specified" do
     ieid1 = generate_ieid
     ieid2 = generate_ieid
@@ -949,7 +947,7 @@ describe Hermes::App do
     authenticated_post uri1, "operator", "operator"
     authenticated_post uri2, "operator", "operator"
     authenticated_post uri3, "operator", "operator"
-    
+
     doc =<<-XML_UPLOAD
       <package_request_submission>
         <requests type="disseminate">

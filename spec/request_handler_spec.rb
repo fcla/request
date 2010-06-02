@@ -1,5 +1,5 @@
-require 'request_handler'
 require 'helper'
+require 'request_handler'
 
 describe RequestHandler do
 
@@ -28,7 +28,7 @@ describe RequestHandler do
     now = Time.now
 
     id = RequestHandler.enqueue_request "operator", :disseminate, ieid
-    
+
     just_added = Request.get(id)
 
     just_added.should_not == nil
@@ -40,7 +40,7 @@ describe RequestHandler do
     just_added.operations_agent.identifier.should == "operator"
     just_added.account.should == just_added.operations_agent.account
 
-    pt_event = sip.operations_events.first(:event_name => "Request Submission") 
+    pt_event = sip.operations_events.first(:event_name => "Request Submission")
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -55,7 +55,7 @@ describe RequestHandler do
     now = Time.now
 
     id = RequestHandler.enqueue_request "operator", :withdraw, ieid
-    
+
     just_added = Request.get(id)
 
     just_added.should_not == nil
@@ -67,7 +67,7 @@ describe RequestHandler do
     just_added.operations_agent.identifier.should == "operator"
     just_added.account.should == just_added.operations_agent.account
 
-    pt_event = sip.operations_events.first(:event_name => "Request Submission") 
+    pt_event = sip.operations_events.first(:event_name => "Request Submission")
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -82,7 +82,7 @@ describe RequestHandler do
     now = Time.now
 
     id = RequestHandler.enqueue_request "operator", :peek, ieid
-    
+
     just_added = Request.get(id)
 
     just_added.should_not == nil
@@ -94,7 +94,7 @@ describe RequestHandler do
     just_added.operations_agent.identifier.should == "operator"
     just_added.account.should == just_added.operations_agent.account
 
-    pt_event = sip.operations_events.first(:event_name => "Request Submission") 
+    pt_event = sip.operations_events.first(:event_name => "Request Submission")
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -116,7 +116,7 @@ describe RequestHandler do
     now = Time.now
 
     id = RequestHandler.enqueue_request "contact", :peek, ieid
-    
+
     just_added = Request.get(id)
 
     just_added.should_not == nil
@@ -128,7 +128,7 @@ describe RequestHandler do
     just_added.operations_agent.identifier.should == "contact"
     just_added.account.should == just_added.operations_agent.account
 
-    pt_event = sip.operations_events.first(:event_name => "Request Submission") 
+    pt_event = sip.operations_events.first(:event_name => "Request Submission")
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -155,7 +155,7 @@ describe RequestHandler do
     just_added.operations_agent.identifier.should == "contact"
     just_added.account.should == just_added.operations_agent.account
 
-    pt_event = sip.operations_events.first(:event_name => "Request Submission") 
+    pt_event = sip.operations_events.first(:event_name => "Request Submission")
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -182,7 +182,7 @@ describe RequestHandler do
     just_added.operations_agent.identifier.should == "contact"
     just_added.account.should == just_added.operations_agent.account
 
-    pt_event = sip.operations_events.first(:event_name => "Request Submission") 
+    pt_event = sip.operations_events.first(:event_name => "Request Submission")
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -217,7 +217,7 @@ describe RequestHandler do
 
     id = RequestHandler.enqueue_request "operator", :disseminate, ieid
     id2 = RequestHandler.enqueue_request "operator", :disseminate, ieid
-    
+
     id2.should == nil
   end
 
@@ -234,7 +234,7 @@ describe RequestHandler do
 
     request_record.is_authorized.should == true
 
-    pt_event = sip.operations_events.first(:event_name => "Request Approval") 
+    pt_event = sip.operations_events.first(:event_name => "Request Approval")
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -296,7 +296,7 @@ describe RequestHandler do
   it "should allow an operator to delete a request by type and ieid" do
     ieid = rand(1000)
     sip = add_sip ieid, @project
-    
+
     request_id = RequestHandler.enqueue_request "operator", :disseminate, ieid
 
     now = Time.now
@@ -305,7 +305,7 @@ describe RequestHandler do
     outcome.should == true
     Request.get(request_id).should == nil
 
-    pt_event = sip.operations_events.first(:event_name => "Request Deletion") 
+    pt_event = sip.operations_events.first(:event_name => "Request Deletion")
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -316,7 +316,7 @@ describe RequestHandler do
   it "should allow an authorized user to delete a request by type and ieid" do
     ieid = rand(1000)
     sip = add_sip ieid, @project
-    
+
     request_id = RequestHandler.enqueue_request "contact", :disseminate, ieid
 
     now = Time.now
@@ -325,7 +325,7 @@ describe RequestHandler do
     outcome.should == true
     Request.get(request_id).should == nil
 
-    pt_event = sip.operations_events.first(:event_name => "Request Deletion") 
+    pt_event = sip.operations_events.first(:event_name => "Request Deletion")
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -455,7 +455,7 @@ describe RequestHandler do
 
     r.status.should == :released_to_workspace
 
-    pt_event = sip.operations_events.first(:event_name => "Request Released to Workspace") 
+    pt_event = sip.operations_events.first(:event_name => "Request Released to Workspace")
 
     pt_event.should_not be_nil
     pt_event.timestamp.to_time.should be_close(now, 1.0)
@@ -476,7 +476,7 @@ describe RequestHandler do
 
     lambda { RequestHandler.enqueue_request "contact_diff_act", :disseminate, ieid }.should raise_error(NotAuthorized)
   end
-  
+
   it "should allow an operator belonging to a different account from the package to queue a request" do
     ieid = rand(1000)
     add_sip ieid, @project
