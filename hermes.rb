@@ -7,7 +7,7 @@ Bundler.setup
 require 'sinatra'
 require 'request_handler'
 require 'libxml'
-require 'db/operations_agent'
+require 'db/operations_agents'
 require 'daitss/config'
 
 helpers do
