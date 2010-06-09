@@ -7,6 +7,8 @@ Bundler.setup
 require 'sinatra'
 require 'request_handler'
 require 'libxml'
+require 'db/operations_agent'
+require 'daitss/config'
 
 helpers do
   # returns true if http basic auth credentials have been included with request
@@ -30,6 +32,9 @@ helpers do
     user_credentials = get_credentials
 
     return nil if user_credentials == nil
+
+    Daitss::CONFIG.load_from_env
+    DataMapper.setup :default, Daitss::CONFIG['database-url'] 
 
     agent = OperationsAgent.first(:identifier => user_credentials[0])
 
