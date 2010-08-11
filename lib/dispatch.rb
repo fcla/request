@@ -1,7 +1,7 @@
-require 'wip'
+require 'daitss/proc/wip'
 require 'uri'
 require 'daitss/config'
-require 'workspace'
+require 'daitss/proc/workspace'
 
 class Dispatch
 

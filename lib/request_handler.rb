@@ -1,10 +1,10 @@
-require 'db/request'
-require 'db/operations_agents'
-require 'db/operations_events'
-require 'db/accounts'
-require 'db/projects'
-require 'db/keys'
-require 'db/sip'
+require 'daitss/db/ops/request'
+require 'daitss/db/ops/operations_agents'
+require 'daitss/db/ops/operations_events'
+require 'daitss/db/ops/accounts'
+require 'daitss/db/ops/projects'
+require 'daitss/db/ops/keys'
+require 'daitss/db/ops/sip'
 
 class InvalidRequestType < StandardError; end
 class NotAuthorized < StandardError; end
@@ -13,7 +13,7 @@ class NoSuchIntEntity < StandardError; end
 # TODO: test how this will behave if a service or program is passed in as the agent
 class RequestHandler
 
-  # enqueues a new request. 
+  # enqueues a new request.
   # If authorized, returns the id of the new request.
   # Raises exception if not authorized.
   # Returns nil if a request of the same time is already enqueued for specified ieid.
@@ -64,10 +64,10 @@ class RequestHandler
     end
   end
 
-  # authorize a request, and save record of authorization outcome. 
+  # authorize a request, and save record of authorization outcome.
   # raises exception if user is not authorized to authorize request
   # Adds OperationsEvent
-  
+
   def self.authorize_request request_id, authorizing_agent_identifier
     request = Request.get(request_id)
     now = Time.now
@@ -89,7 +89,7 @@ class RequestHandler
   # if one exists, returns any pending request associated with ieid ieid of type type.
   # if no such request exists, returns nil.
   # if user is not authorized, exception is raised
-  
+
   def self.query_request requesting_agent_identifier, ieid, type
     sip = SubmittedSip.first(:ieid => ieid)
 
@@ -98,7 +98,7 @@ class RequestHandler
     request = sip.requests.first(:request_type => type, :status => :enqueued)
 
     # if user is not an operator, check if account of requesting user matches account of the request
-    
+
     agent = OperationsAgent.first(:identifier => requesting_agent_identifier)
 
     if request and agent
@@ -116,7 +116,7 @@ class RequestHandler
   # if user doesn't have authorization, raise error.
   # if no such request exists, returns nil.
   # Adds OperationsEvent
-  
+
   def self.delete_request requesting_agent_identifier, ieid, type
     request = query_request requesting_agent_identifier, ieid, type
     agent = OperationsAgent.first(:identifier => requesting_agent_identifier)
@@ -133,7 +133,7 @@ class RequestHandler
   # returns the set of all requests (pending and not) for a given account
   # raises exception if user does not have authorization
   # returns empty array if result set is empty
-  
+
   def self.query_account requesting_agent_identifier, account
     agent = OperationsAgent.first(:identifier => requesting_agent_identifier)
 
@@ -144,7 +144,7 @@ class RequestHandler
     end
   end
 
-  # returns the set of all requests (pending and not) for a given ieid 
+  # returns the set of all requests (pending and not) for a given ieid
   # raises exception if user does not have authorization
   # returns empty array if result set is empty
 

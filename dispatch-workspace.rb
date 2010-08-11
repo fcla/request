@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 
-require 'db/request'
+require 'daitss/db/ops/db/request'
 require 'dispatch'
 require 'daitss/config'
-require 'db/operations_events'
-require 'db/sip'
+require 'daitss/db/ops/db/operations_events'
+require 'daitss/db/ops/db/sip'
 
 WORKSPACE = ENV["WORKSPACE"]
 

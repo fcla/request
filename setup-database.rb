@@ -1,11 +1,11 @@
 #!/usr/bin/env ruby
 
 require 'dm-core'
-require 'db/operations_agents'
-require 'db/operations_events'
-require 'db/accounts'
-require 'db/projects'
-require 'db/keys'
+require 'daitss/db/ops/db/operations_agents'
+require 'daitss/db/ops/db/operations_events'
+require 'daitss/db/ops/db/accounts'
+require 'daitss/db/ops/db/projects'
+require 'daitss/db/ops/db/keys'
 require 'request'
 
 DataMapper.setup(:default, "sqlite3://#{Dir.pwd}/data/request.db")

@@ -7,7 +7,7 @@ Bundler.setup
 require 'sinatra'
 require 'request_handler'
 require 'libxml'
-require 'db/operations_agents'
+require 'daitss/db/ops/operations_agents'
 require 'daitss/config'
 
 helpers do
@@ -34,7 +34,7 @@ helpers do
     return nil if user_credentials == nil
 
     Daitss::CONFIG.load_from_env
-    DataMapper.setup :default, Daitss::CONFIG['database-url'] 
+    DataMapper.setup :default, Daitss::CONFIG['database-url']
 
     agent = OperationsAgent.first(:identifier => user_credentials[0])
 
