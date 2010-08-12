@@ -84,6 +84,8 @@ end
 
 # handle post requests for creation of single package request resource
 
+set :root, File.dirname(__FILE__)
+
 post '/requests/:ieid/:type' do
   halt 401 unless credentials?
 
