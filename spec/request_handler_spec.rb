@@ -1,10 +1,13 @@
 require 'helper'
 require 'request_handler'
+require 'daitss/config'
 
 describe RequestHandler do
 
   before(:each) do
-    DataMapper.setup(:default, "sqlite3://#{Dir.pwd}/data/request.db")
+    Daitss::CONFIG.load_from_env
+
+    DataMapper.setup(:default, Daitss::CONFIG['database-url'])
     DataMapper.auto_migrate!
 
     a = add_account

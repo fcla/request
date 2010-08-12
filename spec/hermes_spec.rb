@@ -7,13 +7,16 @@ require 'hermes'
 require 'helper'
 require 'base64'
 require 'libxml'
+require 'daitss/config'
 
 
 describe 'request service' do
 
 
   before(:each) do
-    DataMapper.setup(:default, "sqlite3://#{Dir.pwd}/data/request.db")
+    Daitss::CONFIG.load_from_env
+
+    DataMapper.setup(:default, Daitss::CONFIG["database-url"])
     DataMapper.auto_migrate!
 
     a = add_account
