@@ -10,6 +10,8 @@ require 'libxml'
 require 'daitss/db/ops/operations_agents'
 require 'daitss/config'
 
+# TODO: rename to app.rb to be consistent with other services
+
 helpers do
   # returns true if http basic auth credentials have been included with request
 
